@@ -45,6 +45,37 @@ One row per function/class covered. Status column summarizes the single biggest 
 | freesurfer | write_decimated | [freesurfer/write_decimated.md](freesurfer/write_decimated.md) | 🔴 no docstring; likely raises `TypeError` on Python 3 (text/binary file-mode mismatch) |
 | freesurfer | SpringLayout | [freesurfer/SpringLayout.md](freesurfer/SpringLayout.md) | 🔴 no docstring anywhere in class; dead/broken electrostatic-repulsion code path |
 | freesurfer | stretch_mwall | [freesurfer/stretch_mwall.md](freesurfer/stretch_mwall.md) | 🔴 no docstring; mutates `pts` in place (undocumented) |
+| mapper | get_mapper | [mapper/get_mapper.md](mapper/get_mapper.md) | 🔴 no docstring; `type`'s 10 valid values undocumented (bare `KeyError` otherwise); `**kwargs` forwarding/caching undocumented |
+| mapper | Mapper | [mapper/Mapper.md](mapper/Mapper.md) | 🔴 `__call__` (the main usage pattern) totally undocumented and does two unrelated things depending on input type; `idxmap` dead code confirmed (always `None`) |
+| mni | compute_mni_transform | [mni/compute_mni_transform.md](mni/compute_mni_transform.md) | 🟡 already well-documented (Params+Returns); missing Raises — unchecked `flirt` return code surfaces as an opaque downstream error |
+| mni | transform_to_mni | [mni/transform_to_mni.md](mni/transform_to_mni.md) | 🟡 same unchecked-subprocess issue; returned image is backed by an uncleaned temp file (undocumented) |
+| mni | transform_surface_to_mni | [mni/transform_surface_to_mni.md](mni/transform_surface_to_mni.md) | 🟢 no major issues; doesn't call FSL directly unlike its siblings (worth noting) |
+| mni | transform_mni_to_subject | [mni/transform_mni_to_subject.md](mni/transform_mni_to_subject.md) | 🟡 `volarray` shape vs. `template` never validated up front; unchecked subprocess return code |
+| polyutils | Surface | [polyutils/Surface.md](polyutils/Surface.md) | 🟡 large class, mostly well-documented; `edge_collapse` is unimplemented dead code; several methods (`boundary_vertices`, `patches`, `polyhedra`) lack Returns sections |
+| polyutils | Distortion | [polyutils/Distortion.md](polyutils/Distortion.md) | 🟢 no major issues — one of the best-documented classes in the codebase |
+| segment | init_subject | [segment/init_subject.md](segment/init_subject.md) | 🟡 `**kwargs` forwarding to `autorecon` unenumerated; initial `recon-all` call's return code unchecked |
+| segment | cut_surface | [segment/cut_surface.md](segment/cut_surface.md) | 🔴 likely real bug — `flatten_with="SLIM"` sets `path_type="slip"` (typo), which combined with `get_paths`'s silent-`None` return likely raises `TypeError` on import |
+| segment | fix_wm | [segment/fix_wm.md](segment/fix_wm.md) | 🔴 deprecation notice points to a `rerun_recon()` function that doesn't exist anywhere in pycortex |
+| segment | fix_pia | [segment/fix_pia.md](segment/fix_pia.md) | 🔴 same nonexistent-`rerun_recon()` deprecation issue as `fix_wm` |
+| surfinfo | curvature | [surfinfo/curvature.md](surfinfo/curvature.md) | 🟡 no Returns section; not cross-referenced to `cortex.db.get_surfinfo`, its typical entry point |
+| surfinfo | distortion | [surfinfo/distortion.md](surfinfo/distortion.md) | 🟡 `dist_type` unvalidated (bare `AttributeError` for a bad value); not cross-referenced to `polyutils.Distortion` |
+| surfinfo | thickness | [surfinfo/thickness.md](surfinfo/thickness.md) | 🟢 minor gaps only (no Returns section) |
+| surfinfo | tissots_indicatrix | [surfinfo/tissots_indicatrix.md](surfinfo/tissots_indicatrix.md) | 🟡 non-deterministic (no seed param, undocumented); saved `centers` output field undocumented |
+| surfinfo | flat_border | [surfinfo/flat_border.md](surfinfo/flat_border.md) | 🔴 currently broken — always raises `NameError` (`height` undefined); also uses removed NetworkX 1.x API |
+| utils | get_ctmpack | [utils/get_ctmpack.md](utils/get_ctmpack.md) | 🟡 incomplete Returns section; no cross-reference to webgl's usage |
+| utils | get_ctmmap | [utils/get_ctmmap.md](utils/get_ctmmap.md) | 🟢 already well-documented; minor gaps (kwargs enumeration, approximation caveat) |
+| utils | get_cortical_mask | [utils/get_cortical_mask.md](utils/get_cortical_mask.md) | 🟡 unrecognized `type` falls through to a bare mapper `KeyError`; noisy progress printing undocumented |
+| utils | get_vox_dist | [utils/get_vox_dist.md](utils/get_vox_dist.md) | 🔴 `surface` parameter entirely missing from Parameters section despite being real |
+| utils | get_hemi_masks | [utils/get_hemi_masks.md](utils/get_hemi_masks.md) | 🔴 `type` param and Returns section both empty in shipped docstring |
+| utils | add_roi | [utils/add_roi.md](utils/add_roi.md) | 🔴 docstring sentence cut off mid-word ("Use the **kwargs inputs to specify"); no Returns/Raises |
+| utils | get_roi_verts | [utils/get_roi_verts.md](utils/get_roi_verts.md) | 🟡 medial-wall/cut vertex recovery behavior undocumented; affects what returned indices mean |
+| utils | get_roi_mask | [utils/get_roi_mask.md](utils/get_roi_mask.md) | 🔴 deprecated; returns continuous-valued floats despite the name "mask" (undocumented) |
+| utils | get_aseg_mask | [utils/get_aseg_mask.md](utils/get_aseg_mask.md) | 🟡 docstring cross-reference typo (`fs_aseg_mask` should be `fs_aseg_dict`) |
+| utils | get_roi_masks | [utils/get_roi_masks.md](utils/get_roi_masks.md) | 🔴 likely real bug in `fail_for_missing_rois=False` fallback (`dict_keys + list` not valid in Python 3) |
+| utils | get_dropout | [utils/get_dropout.md](utils/get_dropout.md) | 🟡 `power` parameter description is blank in shipped docstring |
+| utils | make_movie | [utils/make_movie.md](utils/make_movie.md) | 🔴 name collides with two unrelated "make movie" functions elsewhere in pycortex; unchecked subprocess return code |
+| utils | vertex_to_voxel | [utils/vertex_to_voxel.md](utils/vertex_to_voxel.md) | 🔴 no summary line at all; author's own in-source comment questions whether it's deprecated |
+| utils | get_cmap | [utils/get_cmap.md](utils/get_cmap.md) | 🔴 likely breaks on Matplotlib >= 3.9 (`plt.cm.get_cmap` removed), masked by a bare `except:` into a generic, typo'd error |
 
 ---
 *Table is appended module-by-module as work progresses — see `_notes.md` for the checklist

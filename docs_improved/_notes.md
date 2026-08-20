@@ -21,6 +21,16 @@ string `1.3.0.dev0` per `cortex/version.py`).
 - [x] `cortex.freesurfer` — get_paths, autorecon, flatten, import_subj, import_flat,
       show_surf, make_fiducial, parse_surf, parse_curv, parse_patch, get_surf, get_curv,
       write_dot, read_dot, write_decimated, SpringLayout, stretch_mwall
+- [x] `cortex.mapper` — Mapper, get_mapper
+- [x] `cortex.mni` — compute_mni_transform, transform_to_mni, transform_surface_to_mni,
+      transform_mni_to_subject
+- [x] `cortex.polyutils` — Surface, Distortion
+- [x] `cortex.segment` — init_subject, fix_wm, fix_pia, cut_surface
+- [x] `cortex.surfinfo` — curvature, distortion, thickness, tissots_indicatrix, flat_border
+- [x] `cortex.utils` — add_roi, get_aseg_mask, get_cmap, get_cortical_mask, get_ctmmap,
+      get_ctmpack, get_dropout, get_hemi_masks, get_roi_mask, get_roi_masks, get_roi_verts,
+      get_vox_dist, make_movie, vertex_to_voxel (anat2epispace documented under
+      cortex.volume — see discrepancy note below)
 - [ ] `cortex.anat` — brainmask, whitematter, voxelize
 - [ ] `cortex.database` — Database
 - [ ] `cortex.freesurfer` — get_paths, autorecon, flatten, import_subj, import_flat,
@@ -116,6 +126,58 @@ string `1.3.0.dev0` per `cortex/version.py`).
   `cortex.database.Database.get_surf` (reads from the pycortex filestore) and
   `cortex.dataset.Dataset.get_surf` (reads from packed HDF5 contents). All three do
   related-but-different things; none cross-reference each other.
+
+### cortex.mapper
+- Matches the scope list (`Mapper`, `get_mapper`). The `cortex.mapper` package has several
+  subclasses (`point.PointNN`/`PointTrilin`/`PointGauss`/`PointLanczos`,
+  `patch.ConstPatchNN`/etc., `line.LineNN`/etc.) that implement the actual per-type
+  behavior via `_getmask`; not individually scoped, not given their own files — their
+  differences are summarized in `get_mapper.md`'s `type` parameter description instead.
+- **`Mapper.idxmap` is confirmed dead code** — see possible-code-issues below.
+
+### cortex.mni
+- Matches the scope list exactly. This module's docstrings are noticeably better than
+  average for this codebase (all four functions have Parameters + Returns) — the main
+  systemic gap here is unchecked `subprocess.call` return codes (see pattern below), not
+  missing documentation content per se.
+
+### cortex.polyutils
+- Matches the scope list (`Surface`, `Distortion`). `cortex.polyutils` also exports many
+  module-level free functions not in the scope list (`tetra_vol`, `brick_vol`,
+  `sort_polys`, `face_area`, `face_volume`, `decimate`, `inside_convex_poly`, `make_cube`,
+  `boundary_edges`, `trace_poly`, `rasterize`, `voxelize`, `measure_volume`,
+  `marching_cubes` — in `cortex/polyutils/misc.py`) — not given standalone files, but
+  several are used internally by other documented functions (e.g. `boundary_edges`,
+  `voxelize` are referenced from `cortex.anat`/`cortex.freesurfer` docs).
+- `Surface` picks up additional public methods via two mixins,
+  `ExactGeodesicMixin` (`exact_geodesic.py`) and `SubsurfaceMixin` (`subsurface.py`) —
+  covered within `Surface.md` per the design doc's guidance to document a class's public
+  methods together with the class.
+
+### cortex.segment
+- Matches the scope list (`init_subject`, `fix_wm`, `fix_pia`, `cut_surface`).
+  `edit_segmentation`, `flatten_slim`, and `show_surface` also exist as public functions
+  in `cortex/segment.py` but are **not** in the scope list — not given standalone files,
+  but `edit_segmentation` is referenced from `fix_wm.md`/`fix_pia.md` since it's the
+  functions' own recommended (partially broken) replacement.
+
+### cortex.surfinfo
+- Matches the scope list exactly. All five functions are the auto-generation targets
+  behind `cortex.db.get_surfinfo(subject, type=<name>, ...)` — none of their docstrings
+  mention this relationship, which is the module's main systemic documentation gap.
+  `flat_border` is a confirmed-broken function (see below) — worth flagging to
+  maintainers as a priority code fix, not just a docs fix.
+
+### cortex.utils
+- **Scope-list discrepancy**: the design doc's `cortex.utils` list includes
+  `anat2epispace`, but that function is actually defined in `cortex/volume.py` (also
+  separately listed under `cortex.volume`'s own scope), not `cortex/utils.py`. Documented
+  once, under `volume/anat2epispace.md`, rather than duplicated.
+- `get_ctm2webgl_map`, `get_fs2webgl_map`, `get_roi_surf`, `get_roipack` (deprecated alias
+  for `db.get_overlay`), `add_cmap`, `download_subject`, `rotate_flatmap` also exist as
+  public functions in `cortex/utils.py` but are **not** in the scope list — not given
+  standalone files.
+- Otherwise matches the scope list.
 
 ## Patterns repeated across many functions (updated as modules are covered)
 
@@ -215,6 +277,30 @@ string `1.3.0.dev0` per `cortex/version.py`).
   (`freesurfer.py:1049,1078-1083,1086-1087`).
 - **`cortex.freesurfer.stretch_mwall` mutates its `pts` argument in place** with no
   docstring warning of this (`freesurfer.py:1107-1113`).
+- **`cortex.surfinfo.flat_border` unconditionally raises `NameError`** — references a
+  bare name `height` (`surfinfo.py:204`) that is never defined as a parameter, local
+  variable, import, or module global anywhere in `cortex/surfinfo.py`. Every call to this
+  function fails immediately. Also uses the removed NetworkX 1.x `Graph.degree().items()`
+  API (`surfinfo.py:183`), which would independently break on any current NetworkX
+  version once/if the `NameError` is fixed. This is the clearest fully-broken (not merely
+  under-documented) public function found in this project so far.
+- **`cortex.segment.cut_surface`'s SLIM branch sets `path_type, flat_type = "slip",
+  "slim"`** (`segment.py:294`, likely a typo for `"slim"`) — combined with
+  `cortex.freesurfer.get_paths`'s silent-`None`-return for unrecognized `type` values,
+  this likely raises `TypeError` inside `os.path.exists(other)` when
+  `flatten_with="SLIM"` and `do_import_subject=True`. Not confirmed against a working SLIM
+  install.
+- **`cortex.segment.fix_wm`/`fix_pia`'s deprecation warnings recommend a `rerun_recon()`
+  function that does not exist anywhere in the pycortex codebase** (confirmed via a
+  repo-wide `grep` for `def rerun_recon`) — the deprecation guidance is only partially
+  actionable.
+- **`cortex.polyutils.Surface.edge_collapse` raises `NotImplementedError`** on its first
+  line, after already partially indexing into `self.connected` — dead/unfinished code
+  (`surface.py:883-887`), same pattern as `quickflat.view.make_movie`.
+- **`cortex.mapper.Mapper.idxmap` is confirmed dead code** — initialized to `None` in
+  `__init__` and never reassigned anywhere in the `cortex.mapper` package (`mapper.py`,
+  `point.py`, `patch.py`, `line.py`); every `if self.idxmap is not None:` branch in
+  `Mapper.__call__` is currently unreachable.
 - **`cortex.anat.voxelize` returns `vox.T` but saves the untransposed `vox`** to
   `outfile` (`anat.py:82-85`) — the in-memory return value and the on-disk file are not the
   same orientation.
@@ -235,6 +321,13 @@ string `1.3.0.dev0` per `cortex/version.py`).
   the CTM metadata JSON — a plain substring replace rather than a structured JSON edit,
   which is a latent risk (not confirmed to have ever misfired) if a subject's internal name
   string happens to be a substring of unrelated JSON content.
+
+- **`cortex.mni`'s three FSL-calling functions (`compute_mni_transform`,
+  `transform_to_mni`, `transform_mni_to_subject`) never check `subprocess.call`'s return
+  code**, and each leaves one or more `tempfile.mktemp()`-created files uncollected on
+  disk. A failed `flirt` call surfaces later as an unrelated, confusing error (e.g.
+  `nibabel` failing to load a missing/empty output file) rather than a clear "flirt
+  failed" message.
 
 ## General recommendations for pycortex maintainers
 
