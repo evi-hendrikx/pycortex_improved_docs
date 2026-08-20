@@ -14,8 +14,8 @@ string `1.3.0.dev0` per `cortex/version.py`).
 
 - [x] `cortex.quickflat` — make_figure, make_png, make_svg
 - [x] `cortex.webgl` — show, make_static
-- [ ] `cortex.dataset` — Volume, Volume2D, VolumeRGB, Vertex, Vertex2D, VertexRGB, Dataset
-- [ ] `cortex.align` — manual, automatic, autotweak
+- [x] `cortex.dataset` — Volume, Volume2D, VolumeRGB, Vertex, Vertex2D, VertexRGB, Dataset
+- [x] `cortex.align` — manual, automatic, autotweak
 - [ ] `cortex.anat` — brainmask, whitematter, voxelize
 - [ ] `cortex.database` — Database
 - [ ] `cortex.freesurfer` — get_paths, autorecon, flatten, import_subj, import_flat,
@@ -59,6 +59,28 @@ string `1.3.0.dev0` per `cortex/version.py`).
   inside `show`'s body, not an importable `cortex.webgl.JSMixer`). Summarized inside
   `webgl/show.md`'s Returns section rather than given its own file, since it isn't a
   standalone documented class in the module.
+
+### cortex.dataset
+- Matches the scope list exactly (`Volume`, `Volume2D`, `VolumeRGB`, `Vertex`, `Vertex2D`,
+  `VertexRGB`, `Dataset`). Additional public-ish classes exist but were intentionally
+  documented *within* the scoped class's file rather than given their own file, since they
+  are base classes / internal building blocks the scope list doesn't name individually:
+  `cortex.dataset.braindata.BrainData`, `VolumeData`, `VertexData` (base classes for
+  `Volume`/`Vertex`); `cortex.dataset.views.Dataview`, `Multiview` (`Multiview.__init__`
+  unconditionally raises `NotImplementedError` — dead/unfinished code, see below);
+  `cortex.dataset.view2D.Dataview2D`; `cortex.dataset.viewRGB.DataviewRGB`, `Colors`,
+  `RGB2HSV`, `HSV2RGB`. `cortex.dataset.views.normalize` /
+  `cortex.dataset.dataset.normalize` (two *different* module-level `normalize` functions,
+  one for single views/tuples, one for whole datasets — also not in the scope list, but
+  their behavior is described inline in `Dataset.md`/`Volume.md` since user-facing classes
+  depend on them for input coercion) were read but not given standalone files.
+
+### cortex.align
+- `mayavi_manual` (deprecated old GUI aligner, requires Mayavi) and `fs_manual`
+  (deprecated alias for `manual`), plus `automatic_fsl` (FSL-based sibling of `automatic`),
+  exist in source but are **not** in the scope list. Not given standalone files (out of
+  scope), but `automatic_fsl` is referenced/partially described inside `automatic.md` since
+  `automatic`'s own docstring points to it as the recommended fallback.
 
 ## Patterns repeated across many functions (updated as modules are covered)
 
@@ -109,6 +131,27 @@ string `1.3.0.dev0` per `cortex/version.py`).
   left in the module.
 - **Mutable default argument** `layers=['rois']` in `make_svg`'s signature (Python
   anti-pattern; not currently mutated, so not an active bug, but fragile).
+- **`cortex.dataset.views.Multiview.__init__` unconditionally raises
+  `NotImplementedError`** on its second line, after already validating its `views` argument
+  — dead/unfinished code (`cortex/dataset/views.py:338-344`), similar to
+  `quickflat.view.make_movie`.
+- **`_find_mask` (used by `Volume.__init__` for masked/linear data) returns the first
+  matching saved mask found by `glob.glob` if multiple masks in the database happen to have
+  the same voxel count** (`cortex/dataset/braindata.py:645-660`) — a potential silent
+  mask-ambiguity bug, not confirmed to occur in practice with pycortex's standard example
+  data.
+- **`VolumeRGB`/`VertexRGB`'s `vmin`/`vmax` accept "a tuple of three floats" per the
+  docstring, but the constructor does not validate tuple length** — `channel_vmins =
+  [float(v) for v in vmin]` (`cortex/dataset/viewRGB.py:265`) silently produces a
+  wrong-length list for a 2-tuple or 4-tuple input, which would misalign with the three
+  color channels downstream rather than raising a clear error.
+- **`VolumeRGB`'s fast-path vs. remap-path fork** (whether raw R/G/B values are used
+  directly, or normalized/recombined through `color_voxels`) is selected by an all-or-
+  nothing conjunction of five conditions (`channel*color` all at R/G/B defaults AND `vmin`
+  AND `vmax` both `None` AND `autorange == "individual"`) — not a bug, but a sharp edge:
+  passing any single styling argument (even one that seems unrelated, like `autorange=
+  "shared"` with default colors and no vmin/vmax) silently switches the whole class's
+  numeric interpretation of the input data. Same logic duplicated in `VertexRGB`.
 - **`cortex.webgl.show`'s `layout` parameter has a wrong type hint** (`Optional[str]`) that
   contradicts its own docstring and actual usage (`None or list of (int, int)`), and
   contradicts the equivalent, correctly-typed `layout` parameter in `make_static`

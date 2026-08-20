@@ -80,81 +80,47 @@ def make_static(
 ## Fixed documentation
 
 ### Summary
-Generates a self-contained, static WebGL brain-viewer web page (HTML + inlined/copied JS,
-CSS, mesh, and data assets) on disk at `outpath`, suitable for uploading to a static web
-host for public sharing — as opposed to `cortex.webgl.show`, which serves an equivalent
-interactive viewer from a live Python/Tornado process.
+Creates a static webGL MRI viewer on disk so it can be shared or hosted, as opposed to
+`cortex.webgl.show`, which serves an equivalent viewer from a live Python process.
 
 ### Parameters
 - **outpath** : str
-    Directory to write the static viewer into. Created (including a `data/` subdirectory)
-    if it doesn't already exist. Existing files with matching names are overwritten.
-- **data** : `cortex.Dataset`, or any object accepted by `cortex.dataset.normalize`
-    Data to display — a `Dataset`, a single `Volume`/`Vertex`/etc. `Dataview`, or a `dict`
-    mapping names to `Dataview` objects (all coerced to a `Dataset` internally).
+    Directory to write the static viewer into (created if missing, including `data/`).
+- **data** : Dataset or implicit Dataset
+    Data to display — a `Dataset`, a single `Dataview`, or a dict of `Dataview` objects.
 - **recache** : bool, default `False`
-    Force regeneration of cached per-subject CTM mesh files and overlay SVG rendering
-    (via `cortex.utils.get_ctmpack`) instead of reusing cached versions.
+    Force recreation of cached CTM/SVG surface files.
 - **template** : str, default `"static.html"`
-    Name of the Tornado HTML template file to render. Looked up first relative to the
-    current working directory, then among pycortex's bundled templates
-    (`cortex/webgl/*.html`).
+    Name of the HTML template file to render.
 - **anonymize** : bool, default `False`
-    If `True`, replace each subject's real name with a generic placeholder (`S0`, `S1`, ...,
-    assigned in sorted order of subject name) in the output CTM/JSON/SVG filenames and
-    within the generated JSON metadata content, so subject identities aren't exposed in the
-    exported static site.
+    Rename CTM/SVG/JSON output generically (`S0`, `S1`, ...) for public distribution.
 - **overlays_available** : tuple of str, optional
-    Which overlay SVG layers (e.g. `'rois'`, `'sulci'`, `'cutouts'`) to include at all in the
-    exported viewer. `None` (default) includes every layer present in the overlay SVG.
+    Overlay layers available in the viewer. `None` includes all layers in the overlay SVG.
 - **overlays_visible** : tuple of str, default `("rois", "sulci")`
-    Which of the included overlay layers start out visible when the viewer first loads
-    (others can still be toggled on in the viewer's GUI).
+    Which available layers start visible.
 - **labels_visible** : tuple of str, default `("rois",)`
-    Which overlay layers' text labels start out visible.
+    Which layers' labels start visible.
 - **types** : tuple of str, default `("inflated",)`
-    Additional cortical surface geometries (beyond the always-included fiducial, pial,
-    white matter, and flat surfaces) to bundle, e.g. `("inflated", "flat")`. Passed through
-    to `cortex.utils.get_ctmpack`.
+    Extra surface types to include besides fiducial/pial/white matter/flat.
 - **html_embed** : bool, default `True`
-    If `True`, inline all referenced JS/CSS resources directly into the output
-    `index.html` (via `cortex.webgl.htmlembed.embed`), producing one large, fully
-    self-contained file. If `False`, `index.html` references external resource files that
-    must be served alongside it (e.g. from pycortex's installed static resources).
+    Inline JS/CSS resources into `index.html`. If `False`, resources must be served
+    separately.
 - **copy_ctmfiles** : bool, default `True`
-    Whether to copy the subject's `.ctm`/`.json`/`.svg` mesh/overlay files into `outpath`.
-    Set `False` to avoid duplicating large mesh files across multiple static exports that
-    share the same subject (in which case the pycortex database cache directory must be
-    served alongside the output instead).
+    Whether to copy mesh files into `outpath`, vs. relying on the pycortex cache being
+    served alongside it.
 - **title** : str, default `"Brain"`
-    Page title shown in the browser tab / viewer header.
+    Page title.
 - **layout** : list of (int, int), optional
-    Grid layout `[(row, col), ...]`-style specification for arranging multiple subjects'
-    viewers as subwindows on one page, passed through unmodified to the HTML template.
-    `None` (default) shows a single viewer with no subwindow splitting. (The exact
-    template-side interpretation of the tuples is not documented in Python; see
-    `static.html`/`mixer.html` for the JS-side consumer.)
+    Subwindow layout for multiple subjects. `None` shows a single viewer.
 - **overlay_file** : str, optional
-    Path to an alternate overlay SVG file to use for every subject in `data`, instead of
-    each subject's own default `overlays.svg`.
-- **curvature_brightness** : float, optional
-    Curvature background brightness (0=black, 1=white). `None` uses the config default
-    (`[curvature] brightness` in `options.cfg`).
-- **curvature_contrast** : float, optional
-    Curvature background contrast. `None` uses the config default (`[curvature] contrast`).
-- **curvature_smoothness** : float, optional
-    Amount of smoothing applied to the curvature map shown in the WebGL viewer. `None` uses
-    the config default (`[curvature] webgl_smooth`).
-- **surface_specularity** : float, optional
-    Specular highlight strength on the rendered 3D surface. `None` uses the config default
-    (`[webgl_viewopts] specularity`).
+    Alternate overlay SVG file for all subjects in `data`.
+- **curvature_brightness**, **curvature_contrast**, **curvature_smoothness**,
+  **surface_specularity** : float, optional
+    Curvature/surface rendering defaults; `None` uses `options.cfg` values.
 - **\*\*kwargs** : forwarded to the Tornado template's `generate(...)` call
-    Any extra keyword becomes a variable available inside the HTML template (`static.html`
-    by default). Unused/unrecognized kwargs are silently ignored by the template rather than
-    raising an error. The built-in template already receives `data`, `colormaps`,
-    `default_cmap`, `python_interface=False`, `leapmotion=True`, `layout`, `subjects`,
-    `viewopts`, and `title` — passing any of those names again via `**kwargs` will raise
-    `TypeError: generate() got multiple values for keyword argument ...`.
+    Unrecognized kwargs are silently ignored by the template. Colliding with an
+    internally-set name (`data`, `colormaps`, `layout`, `subjects`, `viewopts`, `title`,
+    ...) raises `TypeError`.
 
 ### Returns
 `None`. Writes the static viewer (`index.html` plus supporting `data/`, `stim/`, and mesh

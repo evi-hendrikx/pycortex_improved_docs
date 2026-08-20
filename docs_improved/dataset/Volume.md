@@ -91,51 +91,30 @@ inherited public methods/properties, and operators.
 ## Fixed documentation
 
 ### Summary
-`Volume` wraps a 3D (or 4D movie) array of data defined in a subject's native functional
-(EPI) volume space, together with the subject/transform identifiers needed to render it on
-a cortical surface, plus display metadata (colormap, color range, description). It is one
-of pycortex's two primary "Dataview" types (the other being `Vertex`).
+Encapsulates a 3D volume or 4D volumetric movie, plus colormap display metadata.
 
 ### Parameters
 - **data** : ndarray
-    The data to visualize. Accepted shapes:
-    - `(z, y, x)` — a single 3D volume matching the transform's reference image shape.
-    - `(t, z, y, x)` — a 4D "movie" of `t` volumes.
-    - `(v,)` — masked/flattened data for `v` in-cortex voxels (1D). `v` must match the
-      voxel count of an existing saved mask for `(subject, xfmname)` in the pycortex
-      database (auto-detected — see Raises), or `mask` must be given explicitly.
-    - `(t, v)` — masked/flattened movie data (2D), analogous to the above.
+    The data. `(z, y, x)` 3D, `(t, z, y, x)` 4D movie, `(v,)` masked/flattened, or `(t, v)`
+    masked movie. For masked data, a matching saved mask is auto-detected if `mask` isn't
+    given (raises `ValueError` if none matches).
 - **subject** : str
-    Subject identifier; must already exist in the pycortex database (`cortex.db.subjects`).
+    Subject identifier; must exist in the pycortex database.
 - **xfmname** : str
-    Name of a transform already registered for `subject` in the pycortex database (see
-    `cortex.align`), mapping this data's volume space to the subject's anatomical space.
-- **mask** : ndarray of bool, str, or None, optional
-    Only relevant when `data` is 1D/2D (masked). A boolean array of shape `(z, y, x)`
-    marking included voxels, or the name of a saved mask (looked up via
-    `cortex.db.get_mask(subject, xfmname, mask)`). `None` (default) auto-detects a saved
-    mask whose voxel count matches `data`'s last axis length; raises `ValueError` if none
-    match (and picks the first match, silently, if more than one saved mask happens to have
-    the same voxel count — see `_notes.md`).
-- **cmap** : str or matplotlib `Colormap`, optional
-    Colormap name (matplotlib built-in, a pycortex colormap `.png` under
-    `<filestore>/colormaps/`, or a `Colormap` instance). `None` uses `options.cfg`'s
-    `[basic] default_cmap`.
-- **vmin** : float, optional
-    Lower colormap bound. `None` defaults to the 1st percentile of `data` (NaNs treated as
-    0 via `np.nan_to_num` for this calculation only — the underlying data is unaffected).
-- **vmax** : float, optional
-    Upper colormap bound. `None` defaults to the 99th percentile of `data` (same NaN
-    handling as `vmin`).
+    Transform name; must exist in the pycortex database.
+- **mask** : ndarray of bool or str, optional
+    Explicit mask for masked (1D/2D) data — a boolean `(z, y, x)` array, or the name of a
+    saved mask. `None` auto-detects by matching voxel count.
+- **cmap** : str or matplotlib Colormap, optional
+    Colormap (name or instance). `None` uses `options.cfg`'s default.
+- **vmin**, **vmax** : float, optional
+    Colormap bounds. `None` defaults to the 1st/99th percentile of `data` (NaN→0 for this
+    calculation only).
 - **description** : str, default `""`
-    Free-text description shown in the WebGL viewer's data-selection UI.
+    Description shown in the WebGL viewer.
 - **\*\*kwargs**
-    Forwarded to `Dataview.__init__` (and, transitively, stored in `self.attrs`). Notable
-    keys: `state` (opaque, viewer-internal — undocumented in source, marked
-    `TODO: describe what this is` in `VolumeRGB`'s docstring and absent from `Volume`'s),
-    `priority` (`int`, default `1` — display ordering in the WebGL viewer's data list; lower
-    values are prioritized first per `Dataset.__iter__`'s `sorted(..., key=lambda x:
-    x[1].priority)`).
+    Forwarded to `Dataview.__init__` → `self.attrs`, e.g. `priority` (int, default `1`,
+    display ordering) and `state` (opaque, undocumented in source).
 
 ### Returns
 N/A for `__init__`. See "Public methods and properties" below for the return type of each.

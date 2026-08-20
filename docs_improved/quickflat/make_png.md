@@ -62,44 +62,30 @@ def make_png(
 ## Fixed documentation
 
 ### Summary
-Renders a flatmap of `braindata` (identically to `cortex.quickflat.make_figure`) and saves
-it directly to a PNG file, then closes the created matplotlib figure.
+Create a PNG of the VertexData or VolumeData on a flatmap.
 
 ### Parameters
-- **fname** : str, `os.PathLike`, or writable binary file-like object
-    Destination for the PNG. Passed through to `matplotlib.figure.Figure.savefig`.
-- **braindata** : `cortex.dataset.Dataview`
+- **fname** : str, path, or file-like object
+    Destination for the PNG (passed to `Figure.savefig`).
+- **braindata** : Dataview
     The data to plot. See `make_figure.md` for accepted types.
 - **recache** : bool, default `False`
-    Forwarded to `make_figure`. See `make_figure.md`.
+    Forwarded to `make_figure`.
 - **pixelwise** : bool, default `True`
     Forwarded to `make_figure`.
 - **sampler** : {'nearest', 'trilinear', 'gaussian', 'lanczos'}, default `'nearest'`
     Forwarded to `make_figure`.
 - **height** : int, default `1024`
-    Forwarded to `make_figure`; sets the output image's pixel height (width follows the
-    subject's flatmap aspect ratio).
+    Output image height in pixels; forwarded to `make_figure`.
 - **bgcolor** : matplotlib color spec, optional
-    Background fill color for the saved PNG. `None` (default) saves with a transparent
-    background (`alpha=0` outside the flatmap). Any other value (e.g. `'white'`,
-    `(1, 1, 1)`) saves an opaque PNG filled with that color.
+    Background fill color. `None` (default) saves a transparent PNG.
 - **dpi** : int, default `100`
-    Dots-per-inch metadata used only when resizing/saving the final figure
-    (`fig.set_size_inches(...)` and `savefig(..., dpi=dpi)`); it does **not** change pixel
-    resolution, which is controlled by `height`. Note: this `dpi` is *not* forwarded into
-    the inner `make_figure` call, so `make_figure`'s own internal `dpi` (used only for
-    sizing the figure object in inches before this outer resize) always uses `make_figure`'s
-    default of `100`, regardless of what you pass here — it does not currently affect the
-    final image.
+    DPI for the saved figure; controls file metadata/print size, not pixel resolution.
+    Not forwarded into the inner `make_figure` call (see Issues).
 - **\*\*kwargs** : forwarded to `cortex.quickflat.make_figure`
-    Any other keyword accepted by `make_figure` — e.g. `thick`, `depth`, `with_rois`,
-    `with_sulci`, `with_labels`, `with_colorbar`, `with_dropout`, `with_curvature`,
-    `overlay_file`, `linewidth`, `linecolor`, `roifill`, `shadow` (currently broken — see
-    `make_figure.md`), `labelsize`, `labelcolor`, `cutout`, `curvature_brightness`,
-    `curvature_contrast`, `curvature_threshold`, `fig`, `extra_disp`, `extra_hatch`,
-    `colorbar_ticks`, `colorbar_location`, `roi_list`, `sulci_list`, `nanmean`. See
-    `make_figure.md` for the full description of each. `fig` may be passed to draw into an
-    existing figure/axes instead of creating a new one.
+    Any other `make_figure` keyword — e.g. `thick`, `depth`, `with_rois`, `with_sulci`,
+    `with_curvature`, `cutout`, `fig`, `roi_list`, `colorbar_location`, etc. See
+    `make_figure.md` for the full list.
 
 ### Returns
 `None`. The PNG is written to `fname` as a side effect; the matplotlib figure created

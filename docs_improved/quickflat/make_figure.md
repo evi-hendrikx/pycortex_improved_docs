@@ -127,142 +127,66 @@ below it, however, is missing several of these parameters (see "Issues" below).
 ## Fixed documentation
 
 ### Summary
-Renders a single flattened cortical-surface ("flatmap") view of a `cortex.Volume`,
-`cortex.Vertex`, or related `Dataview`/`Dataview2D` object as a matplotlib `Figure`, with
-optional ROI outlines, sulcus outlines, curvature shading, colorbar, dropout hatching, and
-cutout cropping composited on top.
+Show a Volume or Vertex on a flatmap with matplotlib.
 
 ### Parameters
-- **braindata** : `cortex.Volume`, `cortex.Vertex`, `cortex.Volume2D`, `cortex.VolumeRGB`, `cortex.Vertex2D`, `cortex.VertexRGB`, or other `cortex.dataset.Dataview`
-    The brain data to plot. Must resolve (via `cortex.dataset.normalize`) to a `Dataview`,
-    not a `Dataset` (a `Dataset` — a *collection* of views — raises `TypeError`). The
-    object's `.subject` (and, for volumetric data, `.xfmname`) determine which
-    subject/transform's surface geometry is used.
+- **braindata** : Dataview (e.g. `cortex.Volume`, `cortex.Vertex`, ...)
+    The data to plot. Must be a `Dataview`, not a `Dataset` (raises `TypeError`).
 - **recache** : bool, default `False`
-    If `True`, force regeneration of the on-disk flatmap-geometry cache files (masks and
-    pixel/vertex mapping matrices, stored as `.npz` under the subject's pycortex cache
-    directory) instead of reusing any that already exist. Slower, but can fix stale-cache
-    artifacts after you've changed a subject's alignment or flatmap.
+    Force recreation of cached intermediate flatmap files. Slower, but can fix stale-cache
+    issues after changing an alignment.
 - **pixelwise** : bool, default `True`
-    If `True`, sample volumetric data at every output pixel independently (via a
-    precomputed sparse pixel→voxel weight matrix), which gives smoother-looking flatmaps.
-    If `False`, data are instead sampled per-vertex, then mapped to pixels via nearest
-    surface vertex. Ignored for pure vertex data.
+    Use pixel-wise mapping instead of nearest-vertex mapping.
 - **thick** : int, default `32`
-    Number of samples to take through cortical thickness (from white-matter to pial
-    surface) per pixel when `pixelwise=True`; the samples are averaged. Ignored if
-    `pixelwise=False`.
+    Number of samples through cortical thickness per pixel. Only used if `pixelwise=True`.
 - **sampler** : {'nearest', 'trilinear', 'gaussian', 'lanczos'}, default `'nearest'`
-    Name of the resampling kernel (defined in `cortex.mapper.samplers`) used to pull
-    values from the volumetric data at arbitrary (non-voxel-center) coordinates.
+    Resampling kernel for pulling values from volumetric data (see `cortex.mapper.samplers`).
 - **height** : int, default `1024`
-    Height, in pixels, of the rendered flatmap image. Width is set automatically from the
-    subject's flatmap aspect ratio.
+    Height in pixels of the output image; width follows the flatmap's aspect ratio.
 - **dpi** : int, default `100`
-    Dots-per-inch used only to convert the final image's pixel size into the matplotlib
-    figure's physical size in inches (`fig.set_size_inches`); does not change the number of
-    rendered pixels.
+    DPI used only for sizing the matplotlib figure in inches, not pixel resolution.
 - **depth** : float, default `0.5`
-    Fractional cortical depth to sample data from when `thick <= 1`: 0 = white/gray-matter
-    boundary, 1 = pial surface. Ignored when `thick > 1` (all `thick` depths are sampled and
-    averaged instead) or when `pixelwise=False`.
-- **with_rois** : bool, default `True`
-    Draw ROI boundary outlines (and optionally labels) from the subject's `overlays.svg`.
-- **with_sulci** : bool, default `False`
-    Draw sulcus outlines (and optionally labels) from `overlays.svg`.
-- **with_labels** : bool, default `True`
-    Whether to draw text labels for whichever of ROIs/sulci/custom layers are enabled.
-- **with_colorbar** : bool, default `True`
-    Whether to draw a colorbar for the data layer.
+    Cortical depth to sample (0=white matter, 1=pial). Used only when `thick <= 1`.
+- **with_rois**, **with_sulci**, **with_labels**, **with_colorbar** : bool
+    Whether to draw ROI outlines, sulcus outlines, layer labels, and a colorbar.
+    Defaults `True`, `False`, `True`, `True`.
 - **with_borders** : bool, default `False`
-    **Currently has no effect.** Accepted by the signature but never read in the function
-    body (as of this version of pycortex) — no "borders" layer is drawn regardless of its
-    value. Kept here for completeness/forward-compatibility; see `_notes.md` for a
-    recommendation to either implement or remove it.
-- **with_dropout** : bool, float, or `cortex.Dataview`, default `False`
-    Controls hatching that flags low-signal ("dropout") regions.
-    - `False` (default): no dropout hatching.
-    - `True`: compute a dropout mask automatically via `cortex.utils.get_dropout(subject,
-      xfmname, power=20)` from the reference EPI image of the data's transform.
-    - a `float`: same as `True` but uses this value as the `power` exponent passed to
-      `get_dropout` (higher = hatching concentrated more tightly on the very lowest signal).
-    - a `cortex.Dataview`: use this pre-computed view's values directly as the dropout
-      map instead of calling `get_dropout`.
+    Currently has no effect — accepted but unused in this version of pycortex.
+- **with_dropout** : bool, float, or Dataview, default `False`
+    Overlay hatching for low-signal regions. `True` auto-computes dropout (power=20);
+    a float uses that as the power; a `Dataview` supplies the dropout map directly.
 - **with_curvature** : bool, default `False`
-    Whether to render anatomical curvature as a grayscale background layer beneath the data.
-- **extra_disp** : tuple of (str, str), optional
-    `(filename, layer)` — path to an external SVG file (structured identically to the
-    subject's `overlays.svg`) and the name of a layer within it to render as an extra
-    outline/label layer.
+    Show curvature as a grayscale background layer.
+- **extra_disp** : (str, str), optional
+    `(filename, layer)` — an extra SVG layer to display, from a file structured like
+    `overlays.svg`.
 - **with_connected_vertices** : bool, default `False`
-    If `True`, overlay line segments connecting pairs of surface vertices that fall in the
-    same functional voxel but are spatially distant on the flattened surface (useful for
-    visualizing flattening discontinuities). Requires `braindata` to be volumetric (have an
-    `xfmname`); raises `ValueError` otherwise. Can be slow for large surfaces.
+    Draw lines between distant vertices sharing a voxel. Volumetric data only
+    (raises `ValueError` for vertex data).
 - **overlay_file** : str, optional
-    Path to an alternate `overlays.svg`-format file to use instead of the subject's default
-    overlay file in the pycortex database.
-- **linewidth** : int, optional
-    Width (in the SVG's internal units) of ROI/sulcus/custom-layer outline strokes.
-    `None` uses the default from the local `options.cfg` (`[rois_paths]`/`[sulci_paths]`
-    section, key `linewidth`/`stroke-width`).
-- **linecolor** : matplotlib color spec, optional
-    Any value accepted by `matplotlib.colors.ColorConverter.to_rgba` (e.g. `'red'`,
-    `'#ff0000'`, `(1, 0, 0, 1)`). Color of outline strokes. `None` uses the config default.
-- **roifill** : matplotlib color spec, optional
-    Fill color for the interior of each ROI shape. `None` uses the config default
-    (usually no fill / transparent).
-- **shadow** : int, optional
-    **Not currently functional.** Intended to control a drop-shadow effect, but any
-    non-`None` value raises `KeyError: 'shadow'` (see Raises, and `_notes.md`). Leave this
-    at `None`.
-- **labelsize** : str, optional
-    Font size for ROI/sulcus labels, e.g. `"16pt"`. `None` uses the config default.
-- **labelcolor** : matplotlib color spec, optional
-    Color for ROI/sulcus label text. `None` uses the config default.
+    Alternate overlay SVG file to use instead of the subject's default.
+- **linewidth**, **linecolor**, **roifill**, **shadow**, **labelsize**, **labelcolor** :
+  optional
+    Line/fill/label styling for ROIs and sulci. `None` uses `options.cfg` defaults.
+    `shadow` is currently non-functional — any non-`None` value raises `KeyError` (see
+    Issues).
 - **cutout** : str, optional
-    Name of a named shape within the `"cutouts"` layer of the subject's overlay SVG file
-    (`overlays.svg` unless `overlay_file` is given) to use as a crop mask — only the region
-    inside that named shape is kept in the final figure, everything else is clipped away.
-    Cutout shapes are drawn/named in the pycortex overlay editor (see `cortex.utils.add_roi`
-    and the "sulcus/ROI drawing" GUI); there is no cutout by default. Raises an exception if
-    the named cutout has zero pixels (e.g. a typo'd name).
-- **curvature_brightness** : float in [0, 1], optional
-    Mean brightness of the curvature background (0 = black, 1 = white). `None` uses the
-    config default. Only meaningful if `with_curvature=True`.
-- **curvature_contrast** : float in [0, 1], optional
-    Contrast of the curvature background (0 = flat gray, 1 = maximal black/white contrast
-    given `curvature_brightness`). `None` uses the config default.
-- **curvature_threshold** : bool, optional
-    If `True`, binarize curvature into two flat shades (gyri vs. sulci) instead of a
-    continuous grayscale gradient. `None` uses the config default.
-- **fig** : `matplotlib.figure.Figure` or `matplotlib.axes.Axes`, optional
-    Where to draw. `None` (default): create a brand-new figure sized to fit the flatmap
-    exactly. A `Figure`: a *new* full-figure `Axes` is added on top of it (existing axes on
-    that figure are not reused or resized to the flatmap). An `Axes`: draw directly into
-    that axes (the containing figure is *not* resized to fit the flatmap in this case).
-- **extra_hatch** : tuple of (`cortex.Dataview`, (float, float, float)), optional
-    `(dataview, rgb_color)` — an extra cross-hatch layer, analogous to the dropout hatching,
-    driven by an arbitrary `Dataview` rather than the automatic dropout calculation. Hatch
-    opacity is proportional to the view's values (expected roughly in [0, 1]).
+    Name of a shape in the overlay's `"cutouts"` layer to crop the figure to.
+- **curvature_brightness**, **curvature_contrast**, **curvature_threshold** : optional
+    Curvature display tuning; `None` uses `options.cfg` defaults.
+- **fig** : Figure or Axes, optional
+    Where to draw. `None` creates a new figure. A `Figure` gets a new axes added on top
+    (existing axes aren't reused); an `Axes` is drawn into directly.
+- **extra_hatch** : (Dataview, (float, float, float)), optional
+    Extra cross-hatch layer, analogous to dropout hatching, driven by any `Dataview`.
 - **colorbar_ticks** : array-like, optional
-    Tick locations for a 1D data colorbar. `None` defaults to evenly-spaced ticks between
-    the data's `vmin`/`vmax`. Ignored for 2D (`Dataview2D`) colorbars, which instead always
-    use `[vmin, vmax, vmin2, vmax2]` from the view itself.
-- **colorbar_location** : {'left', 'center', 'right'} or 4-tuple of float, default `'center'`
-    Colorbar axes position. A named preset, or an explicit `(left, bottom, width, height)`
-    in figure-fraction coordinates (0-1). Raises `ValueError` if a string is given that is
-    not one of the three presets.
-- **roi_list** : list of str, optional
-    Restrict ROI rendering to only these named ROIs (by their names in the overlay SVG),
-    instead of all ROIs in the `"rois"` layer. `None` draws all of them.
-- **sulci_list** : list of str, optional
-    Restrict sulcus rendering to only these named sulci. `None` draws all of them.
+    Tick locations for the colorbar. `None` uses evenly-spaced values between vmin/vmax.
+- **colorbar_location** : {'left', 'center', 'right'} or 4-tuple, default `'center'`
+    Colorbar position; a preset name or `(left, bottom, width, height)` in figure fraction.
+- **roi_list**, **sulci_list** : list of str, optional
+    Restrict which ROIs/sulci are drawn. `None` draws all.
 - **nanmean** : bool, default `False`
-    When averaging multiple samples per pixel (across cortical thickness, or across
-    multiple voxels contributing to one pixel), whether to ignore NaNs in that average
-    (`True`, `np.nanmean`-like) or propagate them (`False`, default — any NaN contributing
-    to a pixel makes that pixel NaN).
+    Ignore NaNs when averaging multiple samples per pixel.
 
 ### Returns
 - **fig** : `matplotlib.figure.Figure`

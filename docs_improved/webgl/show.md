@@ -96,69 +96,45 @@ the two "quick"/"web" show aliases.
 ## Fixed documentation
 
 ### Summary
-Launches an interactive WebGL cortical-surface viewer for `data`, served by a Tornado web
-server started inside the current Python process, and (by default) opens it in the local
-web browser. Returns a Python proxy object that can script the live browser view.
+Creates a webGL MRI viewer that is dynamically served by a tornado server running inside
+the current python process. Returns a proxy object that can script the live browser view.
 
 ### Parameters
-- **data** : `cortex.Dataset`, or any object accepted by `cortex.dataset.normalize`
+- **data** : Dataset or implicit Dataset
     Data to display — same accepted types as `cortex.webgl.make_static`.
 - **autoclose** : bool, optional
-    If `True`, the server shuts down automatically once the last connected browser client
-    disconnects. If `False`, it stays alive (accepting new connections) until the Python
-    process exits or is interrupted. `None` (default) resolves to the `[webshow] autoclose`
-    key in `options.cfg`, itself defaulting to `True` if that key is absent.
+    Whether the server shuts down once the last client disconnects. `None` resolves to
+    `[webshow] autoclose` in `options.cfg` (default `True` if unset).
 - **open_browser** : bool, optional
-    If `True`, automatically opens the viewer URL in the system's default web browser via
-    `webbrowser.open`, and returns a connected `JSMixer` client proxy (blocking briefly
-    until the browser connects). If `False`, no browser is opened automatically — you must
-    navigate to the printed URL yourself, and **no scriptable client proxy is returned**
-    (see Returns). `None` (default) resolves to `[webshow] open_browser` in `options.cfg`,
-    defaulting to `True` if absent.
+    Whether to auto-open the viewer in a browser and return a connected `JSMixer` client
+    (see Returns). `None` resolves to `[webshow] open_browser` in `options.cfg` (default
+    `True` if unset).
 - **port** : int, optional
-    TCP port for the Tornado server. `None` (default) picks a random port in
-    `[1024, 65536)`. The actual port used is printed to stdout
-    (`"Started server on port <port>"`) and embedded in the printed/returned URL.
+    Server port. `None` picks a random port in `[1024, 65536)`; the port used is printed.
 - **pickerfun** : callable, optional
-    `f(voxel: (int, int, int), vertex: int, hemi: str) -> None`, called synchronously (on
-    the server's request-handling thread) whenever the viewer reports a surface click, with
-    the clicked functional voxel index, the nearest surface vertex index, and hemisphere
-    (`"left"` or `"right"`). Not called if the browser's click request is missing required
-    query parameters. `None` (default) installs a no-op handler.
+    `f(voxel, vertex, hemi)`, called when a surface location is clicked in the viewer.
+    `None` installs a no-op handler.
 - **recache** : bool, default `False`
-    Force regeneration of cached per-subject CTM mesh/overlay files, as in `make_static`.
+    Force regeneration of cached CTM/SVG surface files.
 - **template** : str, default `"mixer.html"`
-    Name of the Tornado HTML template to serve as the main viewer page.
-- **overlays_available** : tuple of str, optional
-    As in `make_static` — which overlay SVG layers are available in the viewer at all.
-- **overlays_visible** : tuple of str, default `("rois", "sulci")`
-    As in `make_static` — which available layers start visible.
-- **labels_visible** : tuple of str, default `("rois",)`
-    As in `make_static` — which layers' labels start visible.
-- **types** : tuple of str, default `("inflated",)`
-    As in `make_static` — extra surface geometries to make available for mesh-morphing in
-    the viewer, beyond fiducial/pial/white matter/flat.
-- **overlay_file** : str, optional
-    As in `make_static` — alternate overlay SVG file for all subjects in `data`.
+    Name of the HTML template to serve.
+- **overlays_available**, **overlays_visible**, **labels_visible**, **types**,
+  **overlay_file** : optional
+    Same as in `cortex.webgl.make_static`.
 - **curvature_brightness**, **curvature_contrast**, **curvature_smoothness**,
   **surface_specularity** : float, optional
-    As in `make_static` — visual defaults for the curvature/surface rendering, each falling
-    back to the corresponding `options.cfg` value when `None`.
+    Same as in `make_static`; `None` uses `options.cfg` defaults.
 - **title** : str, default `"Brain"`
-    Page title / viewer header text.
+    Page title.
 - **layout** : list of (int, int), optional
-    Subwindow grid layout for multi-subject viewing, as in `make_static`. (Signature type
-    hint currently says `str`; this is believed to be an error — see Issues.)
+    Subwindow layout for multiple subjects. (Signature type hint says `str` — believed to
+    be an error, see Issues.)
 - **display_url** : bool, default `True`
-    Only relevant when `open_browser=False`: if `True`, displays a clickable link to the
-    viewer via `IPython.display.HTML` (useful in Jupyter). Set `False` to suppress this
-    (e.g. in non-notebook / headless contexts where IPython display is unavailable or
-    unwanted). Silently does nothing if `IPython` isn't installed or there's no active
-    IPython display (wrapped in a bare `try/except`).
+    If `open_browser=False`, display a clickable link via `IPython.display` (useful in
+    notebooks). Silently does nothing without IPython.
 - **\*\*kwargs** : forwarded to the Tornado template's `generate(...)` call
-    Same caveats as `make_static`: unrecognized kwargs are silently unused by the template;
-    kwargs colliding with `data`, `colormaps`, `default_cmap`, `python_interface`,
-    `leapmotion`, `layout`, `subjects`, `viewopts`, `title` raise `TypeError`.
+    Same caveats as `make_static` — unrecognized kwargs are ignored by the template; a
+    name collision with an internally-set variable raises `TypeError`.
 
 ### Returns
 - If `open_browser` is (effectively) `True`: a **`JSMixer`** instance (a

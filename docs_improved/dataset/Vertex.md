@@ -76,28 +76,18 @@ this file focuses on what's different for vertex (surface-space) data.
 ## Fixed documentation
 
 ### Summary
-`Vertex` wraps a 1D (or 2D movie) array of data defined per-surface-vertex (as opposed to
-`Volume`'s per-voxel data), together with a subject identifier and display metadata. It is
-pycortex's primary surface-space `Dataview` type.
+Encapsulates a 1D vertex map or 2D vertex movie, plus colormap display metadata.
 
 ### Parameters
 - **data** : ndarray
-    Vertex data. Accepted shapes: `(v,)` for a single map, or `(t, v)` for a movie, where
-    `v` is either the total number of vertices across both hemispheres
-    (`llen + rlen`, from the subject's white-matter or fiducial surface), or exactly one
-    hemisphere's vertex count (`llen` or `rlen`) — in which case the *other* hemisphere is
-    filled with zeros automatically.
+    Vertex data, shape `(v,)` or `(t, v)`. `v` may be both hemispheres' vertex count
+    (`llen + rlen`) or just one hemisphere's (`llen` or `rlen`), in which case the other
+    hemisphere is filled with zeros.
 - **subject** : str
     Subject identifier; must exist in the pycortex database.
-- **cmap** : str or matplotlib `Colormap`, optional
-    As in `Volume`.
-- **vmin** : float, optional
-    As in `Volume` — 1st percentile of `data` (NaN→0) if not given. Computed over the
-    *full* (both-hemisphere, possibly zero-padded) data.
-- **vmax** : float, optional
-    As in `Volume` — 99th percentile, same caveat.
-- **description** : str, default `""`
-    As in `Volume`.
+- **cmap**, **vmin**, **vmax**, **description** : optional
+    As in `Volume`. `vmin`/`vmax` default to the 1st/99th percentile of the full
+    (possibly zero-padded) data.
 - **\*\*kwargs**
     Forwarded to `Dataview.__init__`; same `state`/`priority` notes as `Volume`.
 

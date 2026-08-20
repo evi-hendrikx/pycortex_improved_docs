@@ -69,54 +69,35 @@ were inferred from usage in the body.
 ## Fixed documentation
 
 ### Summary
-Renders `braindata` as a flattened cortical image and embeds it (as one or more base64 PNG
-raster layers: data, optionally curvature, optionally dropout hatching) inside a copy of the
-subject's overlay SVG file, keeping the requested vector `layers` (e.g. ROI outlines) as
-real, editable SVG paths on top. Useful for producing publication figures where ROI outlines
-need to remain vector graphics (editable in Inkscape/Illustrator) while the underlying data
-map is a raster image.
+Save an svg file of the desired flatmap, with vector ROI/sulcus outlines layered over one
+or more raster (PNG) image layers (data, curvature, dropout).
 
 ### Parameters
 - **fname** : str
-    File path to save the resulting `.svg` file to.
-- **braindata** : `cortex.dataset.Dataview`
+    File path to save the resulting `.svg` to.
+- **braindata** : Dataview
     The data to render as the raster data layer. See `make_figure.md` for accepted types.
 - **with_labels** : bool, default `False`
-    Whether to show text labels on the vector layers listed in `layers` (e.g. ROI names).
+    Show text labels on the vector layers listed in `layers`.
 - **with_curvature** : bool, default `True`
-    Whether to render a grayscale curvature image and embed it as a background raster layer
-    beneath the data. Uses fixed 2-level shading (0.25/0.5) rather than a continuous
-    colormap — there are no tunable brightness/contrast parameters here (unlike
-    `make_figure`'s `curvature_brightness`/`curvature_contrast`).
+    Include a grayscale curvature background layer (fixed 2-level shading; not tunable
+    the way `make_figure`'s `curvature_brightness`/`curvature_contrast` are).
 - **layers** : list of str, default `['rois']`
-    Which named vector layer(s) from the overlay SVG to keep as real (editable) SVG
-    paths in the output — typically `'rois'` and/or `'sulci'`, or any custom layer name
-    present in the subject's `overlays.svg`.
+    Which overlay layer(s) to keep as real, editable vector paths (e.g. `'rois'`,
+    `'sulci'`, or a custom layer name).
 - **height** : int, default `1024`
-    Height, in pixels, of the embedded raster PNG layer(s).
+    Height in pixels of the embedded raster layer(s).
 - **overlay_file** : str, optional
-    Path to an alternate overlay SVG file to use instead of the subject's default
-    `overlays.svg` in the pycortex database.
-- **with_dropout** : bool or `cortex.Dataview`, default `False`
-    Whether/how to overlay dropout hatching as an additional raster layer.
-    - `False` (default): no dropout layer.
-    - `True`: auto-compute dropout via `cortex.utils.get_dropout(subject, xfmname)` (fixed
-      `power=20` — unlike `make_figure`, a custom numeric power is **not** supported here;
-      any other truthy non-`Dataview` value is treated the same as `True` and still uses the
-      default power).
-    - a `cortex.Dataview`: use this view's values directly as the dropout map.
-- **\*\*kwargs** : forwarded to `cortex.quickflat.utils.make_flatmap_image`
-    Recognized keywords (traced through `make_flatmap_image` → `get_flatcache`):
-    - `recache` : bool, default `False` — force regeneration of cached flatmap geometry.
-    - `nanmean` : bool, default `False` — ignore NaNs when averaging samples per pixel.
-    - `pixelwise` : bool, default `True`
-    - `thick` : int, default `32`
-    - `sampler` : {'nearest', 'trilinear', 'gaussian', 'lanczos'}, default `'nearest'`
-    - `depth` : float, default `0.5`
-
-    Unlike `make_png`, keywords specific to `make_figure` (`with_rois`, `linewidth`,
-    `roifill`, `cutout`, `fig`, etc.) are **not** accepted here and will raise `TypeError`
-    if passed, since they're not consumed anywhere in this call chain.
+    Alternate overlay SVG file to use instead of the subject's default.
+- **with_dropout** : bool or Dataview, default `False`
+    Overlay dropout hatching. `True` auto-computes it (fixed power=20 — unlike
+    `make_figure`, a custom numeric power isn't supported); a `Dataview` supplies the map
+    directly.
+- **\*\*kwargs** : forwarded to `make_flatmap_image`/`get_flatcache`
+    `recache` (bool), `nanmean` (bool), `pixelwise` (bool, default `True`), `thick` (int,
+    default `32`), `sampler` (default `'nearest'`), `depth` (float, default `0.5`). Unlike
+    `make_png`, `make_figure`-specific kwargs (`with_rois`, `linewidth`, `cutout`, `fig`,
+    etc.) are **not** accepted and raise `TypeError`.
 
 ### Returns
 `None`. The SVG file is written to `fname` as a side effect.
