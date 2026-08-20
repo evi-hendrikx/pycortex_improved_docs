@@ -100,41 +100,48 @@ Creates a webGL MRI viewer that is dynamically served by a tornado server runnin
 the current python process. Returns a proxy object that can script the live browser view.
 
 ### Parameters
-- **data** : Dataset or implicit Dataset
-    Data to display — same accepted types as `cortex.webgl.make_static`.
+- **data** : Dataset object or implicit Dataset
+    Dataset object containing all the data you wish to plot. Can be any type of implicit
+    dataset, such as a single Volume, Vertex, etc. object or a dictionary of such objects.
 - **autoclose** : bool, optional
-    Whether the server shuts down once the last client disconnects. `None` resolves to
-    `[webshow] autoclose` in `options.cfg` (default `True` if unset).
+    If `True`, the tornado server will automatically be destroyed when the last web client
+    has disconnected. If `False`, the server will stay open, allowing more connections.
+    `None` (its actual default) resolves to `[webshow] autoclose` in `options.cfg`, itself
+    `true` if unset — the docstring's "Default True" wording is only accurate when that
+    config key is absent (see Issues).
 - **open_browser** : bool, optional
-    Whether to auto-open the viewer in a browser and return a connected `JSMixer` client
-    (see Returns). `None` resolves to `[webshow] open_browser` in `options.cfg` (default
-    `True` if unset).
-- **port** : int, optional
-    Server port. `None` picks a random port in `[1024, 65536)`; the port used is printed.
-- **pickerfun** : callable, optional
-    `f(voxel, vertex, hemi)`, called when a surface location is clicked in the viewer.
-    `None` installs a no-op handler.
-- **recache** : bool, default `False`
-    Force regeneration of cached CTM/SVG surface files.
-- **template** : str, default `"mixer.html"`
-    Name of the HTML template to serve.
+    If `True`, uses the webbrowser library to open the viewer in the default local browser,
+    and returns a connected client (see Returns). `None` resolves to `[webshow]
+    open_browser` in `options.cfg` the same way as `autoclose`.
+- **port** : int or None, optional
+    The port that will be used by the server. If `None`, a random port will be selected
+    from the range 1024-65536.
+- **pickerfun** : function or None, optional
+    Should be a function that takes three arguments, a 3-D voxel vector, a vertex index,
+    and the hemisphere ("left" or "right"). Is called whenever a location on the surface is
+    clicked in the viewer.
+- **recache** : bool, optional
+    Force recreation of CTM and SVG files for surfaces. Default `False`
+- **template** : string, optional
+    Name of template HTML file. Default `'mixer.html'`
 - **overlays_available**, **overlays_visible**, **labels_visible**, **types**,
   **overlay_file** : optional
     Same as in `cortex.webgl.make_static`.
 - **curvature_brightness**, **curvature_contrast**, **curvature_smoothness**,
-  **surface_specularity** : float, optional
-    Same as in `make_static`; `None` uses `options.cfg` defaults.
-- **title** : str, default `"Brain"`
-    Page title.
-- **layout** : list of (int, int), optional
-    Subwindow layout for multiple subjects. (Signature type hint says `str` — believed to
-    be an error, see Issues.)
-- **display_url** : bool, default `True`
-    If `open_browser=False`, display a clickable link via `IPython.display` (useful in
-    notebooks). Silently does nothing without IPython.
-- **\*\*kwargs** : forwarded to the Tornado template's `generate(...)` call
-    Same caveats as `make_static` — unrecognized kwargs are ignored by the template; a
-    name collision with an internally-set variable raises `TypeError`.
+  **surface_specularity** : float or None, optional
+    Same as in `make_static`; `None` uses the value specified in the config file.
+- **title** : str, optional
+    The title that is displayed on the viewer website when it is loaded in a browser.
+- **layout** : None or list of (int, int), optional
+    The layout of the viewer subwindows for showing multiple subjects. Default `None`.
+    (Signature type hint currently says `str` — believed to be an error, see Issues.)
+- **display_url** : bool, optional
+    If `True` and `open_browser=False`, display an IPython widget with a URL link to
+    access the viewer. Set `False` to suppress this. Default `True`.
+- **\*\*kwargs**
+    All additional keyword arguments are passed to the template renderer. Same caveats as
+    `make_static` — unrecognized kwargs are ignored by the template; a name collision with
+    an internally-set variable raises `TypeError`.
 
 ### Returns
 - If `open_browser` is (effectively) `True`: a **`JSMixer`** instance (a

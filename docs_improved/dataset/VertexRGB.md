@@ -61,21 +61,29 @@ Contains RGB(A) colors for each vertex, the surface-space counterpart to `Volume
 fast-path/remap-path behavior — see `VolumeRGB.md`).
 
 ### Parameters
-- **red**, **green**, **blue** : ndarray or `cortex.Vertex`
-    The three data channels. If `Vertex` objects, must share `.subject`.
+- **red** : ndarray or Vertex
+    Array or Vertex that represents the first data channel for each vertex. Can be a 1D
+    array (see Vertex for details), or a Vertex.
+- **green** : ndarray or Vertex
+    Array or Vertex that represents the second data channel for each vertex.
+- **blue** : ndarray or Vertex
+    Array or Vertex that represents the third data channel for each vertex.
 - **subject** : str, optional
-    Required only when channels are raw arrays.
-- **alpha** : ndarray or `cortex.Vertex`, optional
-    Per-vertex alpha. `None` → fully opaque; resolved lazily via `.alpha`.
-- **description** : str, default `""`
-- **state** : optional — undocumented in source.
-- **channel1color**, **channel2color**, **channel3color** : 3-tuple of int (0-255), default
-  red/green/blue — target colors used only on the remap path (note naming mismatch with
-  the positional `red`/`green`/`blue` params — see Issues).
-- **max_color_value**, **max_color_saturation** : float in [0, 1] — as in `VolumeRGB`.
-- **vmin**, **vmax** : float or 3-tuple of float, optional — as in `VolumeRGB`.
-- **autorange** : {'individual', 'shared'}, default `'individual'` — as in `VolumeRGB`.
-- **priority** : int, default `1`.
+    Subject identifier. Must exist in the pycortex database. If not given, red must be a
+    Vertex from which the subject can be extracted.
+- **alpha** : ndarray or Vertex, optional
+    Array or Vertex that represents the alpha component of the color for each vertex. If
+    `None`, all vertices will be assumed to have alpha=1.0. Resolved lazily via `.alpha`.
+- **description** : str, optional
+    String describing this dataset. Displayed in webgl viewer.
+- **state** : optional — undocumented in source ("TODO: describe what this is").
+- **channel1color**, **channel2color**, **channel3color** : tuple<uint8, uint8, uint8>
+    RGB color to use for each data channel. Used only on the remap path (note the naming
+    mismatch with the positional `red`/`green`/`blue` params — see Issues).
+- **max_color_value**, **max_color_saturation** : float [0, 1] — as in `VolumeRGB`.
+- **vmin**, **vmax** : float or tuple of float, optional — as in `VolumeRGB`.
+- **autorange** : 'shared' or 'individual', default `'individual'` — as in `VolumeRGB`.
+- **priority** : int, optional. Default `1`.
 
 ### Returns
 N/A for `__init__`.

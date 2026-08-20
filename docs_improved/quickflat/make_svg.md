@@ -73,26 +73,29 @@ Save an svg file of the desired flatmap, with vector ROI/sulcus outlines layered
 or more raster (PNG) image layers (data, curvature, dropout).
 
 ### Parameters
-- **fname** : str
-    File path to save the resulting `.svg` to.
+- **fname** : string
+    file name to save
 - **braindata** : Dataview
-    The data to render as the raster data layer. See `make_figure.md` for accepted types.
-- **with_labels** : bool, default `False`
-    Show text labels on the vector layers listed in `layers`.
-- **with_curvature** : bool, default `True`
-    Include a grayscale curvature background layer (fixed 2-level shading; not tunable
-    the way `make_figure`'s `curvature_brightness`/`curvature_contrast` are).
-- **layers** : list of str, default `['rois']`
-    Which overlay layer(s) to keep as real, editable vector paths (e.g. `'rois'`,
-    `'sulci'`, or a custom layer name).
-- **height** : int, default `1024`
-    Height in pixels of the embedded raster layer(s).
-- **overlay_file** : str, optional
-    Alternate overlay SVG file to use instead of the subject's default.
-- **with_dropout** : bool or Dataview, default `False`
-    Overlay dropout hatching. `True` auto-computes it (fixed power=20 — unlike
-    `make_figure`, a custom numeric power isn't supported); a `Dataview` supplies the map
-    directly.
+    the data you would like to plot on a flatmap
+- **with_labels** : bool
+    Whether to display text labels on ROIs. Default `False`.
+- **with_curvature** : bool
+    Whether to include background curvature (fixed 2-level shading; not tunable the way
+    `make_figure`'s `curvature_brightness`/`curvature_contrast` are). Default `True`.
+- **layers** : list
+    List of layer names to show. Default `['rois']`.
+- **height** : int
+    Height of PNG in pixels. Default `1024`.
+- **overlay_file** : str
+    Custom ROI overlays file to use.
+- **with_dropout** : bool or Dataview
+    If True or a cortex.Dataview object, hatches will be overlaid on top of the
+    flatmap to indicate areas with dropout. If set to True, the dropout areas will
+    be estimated from the intensity of the reference image (fixed power=20 — unlike
+    `make_figure`, a custom numeric power is not supported here). If set to a
+    cortex.Dataview object, values in the dataset will be considered dropout areas.
+    The transparency of the hatches is proportional to the intensity of the values
+    in the dropout dataset. Default `False`.
 - **\*\*kwargs** : forwarded to `make_flatmap_image`/`get_flatcache`
     `recache` (bool), `nanmean` (bool), `pixelwise` (bool, default `True`), `thick` (int,
     default `32`), `sampler` (default `'nearest'`), `depth` (float, default `0.5`). Unlike

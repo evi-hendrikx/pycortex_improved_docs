@@ -80,16 +80,24 @@ Encapsulates a 1D vertex map or 2D vertex movie, plus colormap display metadata.
 
 ### Parameters
 - **data** : ndarray
-    Vertex data, shape `(v,)` or `(t, v)`. `v` may be both hemispheres' vertex count
-    (`llen + rlen`) or just one hemisphere's (`llen` or `rlen`), in which case the other
-    hemisphere is filled with zeros.
+    The data. Can be 1D with shape (v,), or 2D with shape (t,v). Here, v can be the number
+    of vertices in both hemispheres, or the number of vertices in either one of the
+    hemispheres. In that case, the data for the other hemisphere will be filled with
+    zeros (a common gotcha — see Issues).
 - **subject** : str
-    Subject identifier; must exist in the pycortex database.
-- **cmap**, **vmin**, **vmax**, **description** : optional
-    As in `Volume`. `vmin`/`vmax` default to the 1st/99th percentile of the full
-    (possibly zero-padded) data.
+    Subject identifier. Must exist in the pycortex database.
+- **cmap** : str or matplotlib colormap, optional
+    Colormap (or colormap name) to use. If not given defaults to matplotlib default
+    colormap.
+- **vmin** : float, optional
+    Minimum value in colormap. If not given, defaults to the 1st percentile of the data
+    (computed over the full, possibly zero-padded, data).
+- **vmax** : float, optional
+    Maximum value in colormap. If not given defaults to the 99th percentile of the data.
+- **description** : str, optional
+    String describing this dataset. Displayed in webgl viewer.
 - **\*\*kwargs**
-    Forwarded to `Dataview.__init__`; same `state`/`priority` notes as `Volume`.
+    All additional arguments in kwargs are passed to the VertexData and Dataview.
 
 ### Returns
 N/A for `__init__`. See "Public methods and properties" below.

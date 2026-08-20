@@ -71,23 +71,33 @@ Contains two 3D volumes for simultaneous visualization, jointly colormapped via 
 colormap image.
 
 ### Parameters
-- **dim1**, **dim2** : ndarray or `cortex.Volume`
-    The two data channels. Either both raw arrays (then `subject`/`xfmname` required) or
-    both `Volume` objects sharing the same `.subject` (mixing types, or giving
-    `subject`/`xfmname` alongside `Volume`s, raises `TypeError`). `.xfmname` must match by
-    the time `.raw` is accessed (raises `ValueError`).
-- **subject**, **xfmname** : str, optional
-    Required only when `dim1`/`dim2` are raw arrays.
-- **description** : str, default `""`
+- **dim1** : ndarray or Volume
+    The first volume. Can be a 1D or 3D array (see Volume for details), or a Volume.
+- **dim2** : ndarray or Volume
+    The second volume. Same rules as `dim1`; mixing an array with a Volume, or a Volume
+    with a mismatched subject, raises `TypeError`.
+- **subject** : str, optional
+    Subject identifier. Must exist in the pycortex database. If not given, dim1 must be a
+    Volume from which the subject can be extracted.
+- **xfmname** : str, optional
+    Transform name. Must exist in the pycortex database. If not given, dim1 must be a
+    Volume from which the subject can be extracted.
+- **description** : str, optional
+    String describing this dataset. Displayed in webgl viewer.
 - **cmap** : str, optional
-    Name of a **2D colormap image file** (not a matplotlib colormap — see Issues).
-    `None` uses `options.cfg`'s `default_cmap2D`.
-- **vmin**, **vmax** : float, optional
-    Color range for `dim1`. `None` defaults to `dim1.vmin`/`dim1.vmax`.
-- **vmin2**, **vmax2** : float, optional
-    Color range for `dim2`. `None` defaults to `dim2.vmin`/`dim2.vmax`.
+    Name of a 2D colormap **image file**, not a matplotlib colormap (see Issues). If not
+    given defaults to the `default_cmap2d` in your pycortex options.cfg file.
+- **vmin** : float, optional
+    Minimum value in colormap for dim1. If not given defaults to `dim1.vmin` (the shipped
+    docstring says "TODO:WHAT" here — see Issues).
+- **vmax** : float, optional
+    Maximum value in colormap for dim1. If not given defaults to `dim1.vmax`.
+- **vmin2** : float, optional
+    Minimum value in colormap for dim2. If not given defaults to `dim2.vmin`.
+- **vmax2** : float, optional
+    Maximum value in colormap for dim2. If not given defaults to `dim2.vmax`.
 - **\*\*kwargs**
-    Forwarded to `Dataview2D.__init__` → `self.attrs` (e.g. `priority`).
+    All additional arguments in kwargs are passed to the VolumeData and Dataview.
 
 ### Returns
 N/A for `__init__`.

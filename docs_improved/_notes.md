@@ -16,6 +16,11 @@ string `1.3.0.dev0` per `cortex/version.py`).
 - [x] `cortex.webgl` — show, make_static
 - [x] `cortex.dataset` — Volume, Volume2D, VolumeRGB, Vertex, Vertex2D, VertexRGB, Dataset
 - [x] `cortex.align` — manual, automatic, autotweak
+- [x] `cortex.anat` — brainmask, whitematter, voxelize
+- [x] `cortex.database` — Database
+- [x] `cortex.freesurfer` — get_paths, autorecon, flatten, import_subj, import_flat,
+      show_surf, make_fiducial, parse_surf, parse_curv, parse_patch, get_surf, get_curv,
+      write_dot, read_dot, write_decimated, SpringLayout, stretch_mwall
 - [ ] `cortex.anat` — brainmask, whitematter, voxelize
 - [ ] `cortex.database` — Database
 - [ ] `cortex.freesurfer` — get_paths, autorecon, flatten, import_subj, import_flat,
@@ -82,6 +87,36 @@ string `1.3.0.dev0` per `cortex/version.py`).
   scope), but `automatic_fsl` is referenced/partially described inside `automatic.md` since
   `automatic`'s own docstring points to it as the recommended fallback.
 
+### cortex.anat
+- Matches the scope list exactly. None of the three functions have any real docstring
+  (`brainmask`/`whitematter` have none at all; `voxelize` has one hardcoded line) — the
+  least-documented module found so far at the per-function level (worse than `Dataset`,
+  which at least had a class-level docstring).
+
+### cortex.database
+- Matches the scope list (`Database`). Several other classes live in this module
+  (`SubjectDB`, `SurfaceDB`, `Surf`, `XfmDB`, `XfmSet`, `MaskSet`) that back `Database`'s
+  attribute-style subject access (`db.S1.surfaces...`) — not individually scoped, not
+  given their own files, but their existence is worth a mention in case maintainers want
+  them documented later.
+
+### cortex.freesurfer
+- Matches the scope list exactly. Additional public functions/classes exist in source but
+  are **not** in the scope list: `write_surf`, `write_patch` (writer counterparts of
+  `parse_surf`/`parse_patch`), `get_label`, `mri_surf2surf`, `get_mri_surf2surf_matrix`,
+  and `upsample_to_fsaverage`. Not given standalone files (out of scope), but
+  `write_surf`/`write_patch` are referenced from `parse_surf.md`/`parse_patch.md` as
+  counterpart writers since they're directly relevant there.
+- This module has the worst docstring coverage found so far at the per-function level:
+  `parse_surf`, `parse_curv`, `parse_patch`, `write_dot`, `read_dot`, `write_decimated`,
+  and the entire `SpringLayout` class have **completely empty** docstrings (literally
+  `"""\n    """`); `get_surf`, `make_fiducial` have only a one-line docstring each;
+  `stretch_mwall` has none.
+- **`cortex.freesurfer.get_surf` collides in name with two unrelated functions**:
+  `cortex.database.Database.get_surf` (reads from the pycortex filestore) and
+  `cortex.dataset.Dataset.get_surf` (reads from packed HDF5 contents). All three do
+  related-but-different things; none cross-reference each other.
+
 ## Patterns repeated across many functions (updated as modules are covered)
 
 - **Undocumented `**kwargs` forwarding chains** are pervasive in `cortex.quickflat`:
@@ -145,6 +180,44 @@ string `1.3.0.dev0` per `cortex/version.py`).
   [float(v) for v in vmin]` (`cortex/dataset/viewRGB.py:265`) silently produces a
   wrong-length list for a 2-tuple or 4-tuple input, which would misalign with the three
   color channels downstream rather than raising a clear error.
+- **`cortex.anat.whitematter`'s bare `except:` clause** (`anat.py:45`) catches literally
+  any exception (including e.g. `KeyboardInterrupt`) from the FreeSurfer-derived attempt
+  before falling back to FSL — a code smell, not fixed here.
+- **`cortex.anat.whitematter`'s final sanity check `assert arr.sum() >= 0`**
+  (`anat.py:66`) is a tautology for a boolean/binary mask array (sum of non-negative values
+  is always `>= 0`) — likely meant to check for a nonzero sum (mirroring the earlier
+  all-zero check on the first `fast` attempt), but as written it can never fail.
+- **`cortex.database.Database.save_view`'s docstring describes `get_view`'s behavior, not
+  its own** (both share near-identical opening text; `save_view` actually captures and
+  writes the *current* live view to disk, the reverse of what its docstring says) —
+  `database.py:717-736` vs. `745-767`.
+- **`cortex.database.Database.get_overlay` has a self-admitted broken code path**, per its
+  own inline comment: `"NOTE: This try loop is broken, in that it does nothing for the
+  intended use case (loading an overlay from a packed subject) - needs fixing."`
+  (`database.py:354-355`).
+- **`cortex.database.Database.get_anat`'s docstring is truncated mid-sentence** in both its
+  `Parameters` and `Returns` sections (`database.py:200-208`).
+- **`cortex.database.Database.__dir__` omits several real, callable public methods**
+  (`get_paths`, `reload_subjects`, `save_mask`, `get_coords`, `get_shared_voxels`,
+  `clear_cache`, `make_subj`) from its hardcoded list (`database.py:171-174`) — not a
+  functional bug (the methods still work), but breaks tab-completion/introspection for
+  them.
+- **`cortex.freesurfer.write_dot` calls `graph.edges_iter()`**, a NetworkX API removed in
+  NetworkX 2.0 (replaced by `graph.edges()`) — will raise `AttributeError` on any
+  currently-maintained NetworkX version (`freesurfer.py:969`).
+- **`cortex.freesurfer.write_decimated` opens its `.full.patch.3d` output in text mode
+  (`'w'`) but writes `bytes`** (`struct.pack`/`ndarray.tobytes` output) to it — raises
+  `TypeError` on Python 3 (`freesurfer.py:1009-1012`); should be `'wb'`, matching every
+  other binary writer in the module.
+- **`cortex.freesurfer.SpringLayout._estatic`** (an electrostatic-repulsion term) is dead
+  code — never called from `.step()`, and would itself fail if called since it references
+  `self.kdt`, which is only ever set up in a comment, never actually assigned
+  (`freesurfer.py:1049,1078-1083,1086-1087`).
+- **`cortex.freesurfer.stretch_mwall` mutates its `pts` argument in place** with no
+  docstring warning of this (`freesurfer.py:1107-1113`).
+- **`cortex.anat.voxelize` returns `vox.T` but saves the untransposed `vox`** to
+  `outfile` (`anat.py:82-85`) — the in-memory return value and the on-disk file are not the
+  same orientation.
 - **`VolumeRGB`'s fast-path vs. remap-path fork** (whether raw R/G/B values are used
   directly, or normalized/recombined through `color_voxels`) is selected by an all-or-
   nothing conjunction of five conditions (`channel*color` all at R/G/B defaults AND `vmin`

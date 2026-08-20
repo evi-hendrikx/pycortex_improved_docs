@@ -65,26 +65,30 @@ def make_png(
 Create a PNG of the VertexData or VolumeData on a flatmap.
 
 ### Parameters
-- **fname** : str, path, or file-like object
-    Destination for the PNG (passed to `Figure.savefig`).
-- **braindata** : Dataview
-    The data to plot. See `make_figure.md` for accepted types.
-- **recache** : bool, default `False`
-    Forwarded to `make_figure`.
-- **pixelwise** : bool, default `True`
-    Forwarded to `make_figure`.
-- **sampler** : {'nearest', 'trilinear', 'gaussian', 'lanczos'}, default `'nearest'`
-    Forwarded to `make_figure`.
-- **height** : int, default `1024`
-    Output image height in pixels; forwarded to `make_figure`.
-- **bgcolor** : matplotlib color spec, optional
-    Background fill color. `None` (default) saves a transparent PNG.
-- **dpi** : int, default `100`
-    DPI for the saved figure; controls file metadata/print size, not pixel resolution.
+- **fname** : str
+    Filename for where to save the PNG file
+- **braindata** : Dataview (e.g. instance of cortex.Volume, cortex.Vertex, ...)
+    the data you would like to plot on a flatmap
+- **recache** : boolean
+    Whether or not to recache intermediate files. Takes longer to plot this way, potentially
+    resolves some errors. Useful if you've made changes to the alignment
+- **pixelwise** : bool
+    Use pixel-wise mapping
+- **sampler** : str
+    Name of sampling function used to sample underlying volume data. Options are
+    'nearest', 'trilinear', 'gaussian', 'lanczos'.
+- **height** : int
+    Height of the image to render. Automatically scales the width for the aspect of
+    the subject's flatmap
+- **bgcolor** : matplotlib colorspec
+    Color of background of image. `None` gives transparent background.
+- **dpi** : int
+    DPI of the generated image. Controls file metadata/print size, not pixel resolution.
     Not forwarded into the inner `make_figure` call (see Issues).
 - **\*\*kwargs** : forwarded to `cortex.quickflat.make_figure`
-    Any other `make_figure` keyword — e.g. `thick`, `depth`, `with_rois`, `with_sulci`,
-    `with_curvature`, `cutout`, `fig`, `roi_list`, `colorbar_location`, etc. See
+    Any other `make_figure` keyword, e.g. `thick`, `depth`, `with_rois`, `with_sulci`,
+    `with_curvature`, `cutout`, `fig`, `roi_list`, `linewidth`, `linecolor`, `roifill`,
+    `shadow`, `labelsize`, `labelcolor`, `colorbar_location`, `nanmean`. See
     `make_figure.md` for the full list.
 
 ### Returns

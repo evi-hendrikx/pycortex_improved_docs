@@ -95,26 +95,32 @@ Encapsulates a 3D volume or 4D volumetric movie, plus colormap display metadata.
 
 ### Parameters
 - **data** : ndarray
-    The data. `(z, y, x)` 3D, `(t, z, y, x)` 4D movie, `(v,)` masked/flattened, or `(t, v)`
-    masked movie. For masked data, a matching saved mask is auto-detected if `mask` isn't
-    given (raises `ValueError` if none matches).
+    The data. Can be 3D with shape (z,y,x), 1D with shape (v,) for masked data, 4D with
+    shape (t,z,y,x), or 2D with shape (t,v). For masked data, if the size of the given
+    array matches any of the existing masks in the database, that mask will automatically
+    be loaded (picking the first match if more than one has the same voxel count — see
+    `_notes.md`). If it does not, `ValueError` is raised.
 - **subject** : str
-    Subject identifier; must exist in the pycortex database.
+    Subject identifier. Must exist in the pycortex database.
 - **xfmname** : str
-    Transform name; must exist in the pycortex database.
-- **mask** : ndarray of bool or str, optional
-    Explicit mask for masked (1D/2D) data — a boolean `(z, y, x)` array, or the name of a
-    saved mask. `None` auto-detects by matching voxel count.
-- **cmap** : str or matplotlib Colormap, optional
-    Colormap (name or instance). `None` uses `options.cfg`'s default.
-- **vmin**, **vmax** : float, optional
-    Colormap bounds. `None` defaults to the 1st/99th percentile of `data` (NaN→0 for this
-    calculation only).
-- **description** : str, default `""`
-    Description shown in the WebGL viewer.
+    Transform name. Must exist in the pycortex database.
+- **mask** : ndarray or str, optional
+    Binary 3D array with shape (z,y,x) showing which voxels are selected, or the name of a
+    saved mask (looked up via `cortex.db.get_mask`). If masked data is given, the mask
+    will automatically be loaded if it exists in the pycortex database.
+- **cmap** : str or matplotlib colormap, optional
+    Colormap (or colormap name) to use. If not given defaults to matplotlib default
+    colormap.
+- **vmin** : float, optional
+    Minimum value in colormap. If not given, defaults to the 1st percentile of the data.
+- **vmax** : float, optional
+    Maximum value in colormap. If not given defaults to the 99th percentile of the data.
+- **description** : str, optional
+    String describing this dataset. Displayed in webgl viewer.
 - **\*\*kwargs**
-    Forwarded to `Dataview.__init__` → `self.attrs`, e.g. `priority` (int, default `1`,
-    display ordering) and `state` (opaque, undocumented in source).
+    All additional arguments in kwargs are passed to the VolumeData and Dataview, e.g.
+    `priority` (int, default `1`, display ordering) and `state` (opaque, undocumented in
+    source).
 
 ### Returns
 N/A for `__init__`. See "Public methods and properties" below for the return type of each.

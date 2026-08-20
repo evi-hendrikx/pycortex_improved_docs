@@ -84,43 +84,54 @@ Creates a static webGL MRI viewer on disk so it can be shared or hosted, as oppo
 `cortex.webgl.show`, which serves an equivalent viewer from a live Python process.
 
 ### Parameters
-- **outpath** : str
-    Directory to write the static viewer into (created if missing, including `data/`).
-- **data** : Dataset or implicit Dataset
-    Data to display — a `Dataset`, a single `Dataview`, or a dict of `Dataview` objects.
-- **recache** : bool, default `False`
-    Force recreation of cached CTM/SVG surface files.
-- **template** : str, default `"static.html"`
-    Name of the HTML template file to render.
-- **anonymize** : bool, default `False`
-    Rename CTM/SVG/JSON output generically (`S0`, `S1`, ...) for public distribution.
-- **overlays_available** : tuple of str, optional
-    Overlay layers available in the viewer. `None` includes all layers in the overlay SVG.
-- **overlays_visible** : tuple of str, default `("rois", "sulci")`
-    Which available layers start visible.
-- **labels_visible** : tuple of str, default `("rois",)`
-    Which layers' labels start visible.
-- **types** : tuple of str, default `("inflated",)`
-    Extra surface types to include besides fiducial/pial/white matter/flat.
-- **html_embed** : bool, default `True`
-    Inline JS/CSS resources into `index.html`. If `False`, resources must be served
-    separately.
-- **copy_ctmfiles** : bool, default `True`
-    Whether to copy mesh files into `outpath`, vs. relying on the pycortex cache being
-    served alongside it.
-- **title** : str, default `"Brain"`
-    Page title.
-- **layout** : list of (int, int), optional
-    Subwindow layout for multiple subjects. `None` shows a single viewer.
-- **overlay_file** : str, optional
-    Alternate overlay SVG file for all subjects in `data`.
+- **outpath** : string
+    The directory where the static viewer will be saved. Will be created if it
+    doesn't already exist.
+- **data** : Dataset object or implicit Dataset
+    Dataset object containing all the data you wish to plot. Can be any type
+    of implicit dataset, such as a single Volume, Vertex, etc. object or a
+    dictionary of Volume, Vertex, etc. objects.
+- **recache** : bool, optional
+    Force recreation of CTM and SVG files for surfaces. Default `False`
+- **template** : string, optional
+    Name of template HTML file. Default `'static.html'`
+- **anonymize** : bool, optional
+    Whether to rename CTM and SVG files generically, for public distribution. Default
+    `False`.
+- **overlays_available** : tuple, optional
+    Overlays available in the viewer. If `None`, all overlay layers of the svg file will
+    be potentially available in the viewer.
+- **overlays_visible** : tuple, optional
+    The listed overlay layers will be set visible by default. Default `('rois', 'sulci')`.
+- **labels_visible** : tuple, optional
+    Labels for the listed layers will be set visible by default. Default `('rois',)`.
+- **types** : tuple, optional
+    Types of surfaces to include in addition to the original (fiducial, pial, and white
+    matter) and flat surfaces. Default `('inflated',)`.
+- **html_embed** : bool, optional
+    Whether to embed the webgl resources in the html output. Default `True`. If `False`,
+    the webgl resources must be served by your web server.
+- **copy_ctmfiles** : bool, optional
+    Whether to copy the CTM files to the static directory. Default `True`. Set `False` to
+    avoid duplicating files when the same CTM data is used in many static views (the
+    datastore cache must then be served with your web server).
+- **title** : str, optional
+    The title that is displayed on the viewer website when it is loaded in a browser.
+- **layout** : None or list of (int, int)
+    The layout of the viewer subwindows for showing multiple subjects, passed to the
+    template generator. Default `None`, corresponding to no subwindows.
+- **overlay_file** : str or None, optional
+    Custom overlays.svg file to use instead of the default one for this subject.
+    Default `None`.
 - **curvature_brightness**, **curvature_contrast**, **curvature_smoothness**,
-  **surface_specularity** : float, optional
-    Curvature/surface rendering defaults; `None` uses `options.cfg` values.
-- **\*\*kwargs** : forwarded to the Tornado template's `generate(...)` call
-    Unrecognized kwargs are silently ignored by the template. Colliding with an
-    internally-set name (`data`, `colormaps`, `layout`, `subjects`, `viewopts`, `title`,
-    ...) raises `TypeError`.
+  **surface_specularity** : float or None, optional
+    Brightness/contrast/smoothness of curvature overlay, and specularity of surfaces.
+    Default `None`, which uses the value specified in the config file.
+- **\*\*kwargs**
+    All additional keyword arguments are passed to the template renderer. Unrecognized
+    kwargs are silently ignored by the template; colliding with an internally-set name
+    (`data`, `colormaps`, `layout`, `subjects`, `viewopts`, `title`, ...) raises
+    `TypeError`.
 
 ### Returns
 `None`. Writes the static viewer (`index.html` plus supporting `data/`, `stim/`, and mesh

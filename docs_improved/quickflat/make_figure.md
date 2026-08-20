@@ -130,63 +130,86 @@ below it, however, is missing several of these parameters (see "Issues" below).
 Show a Volume or Vertex on a flatmap with matplotlib.
 
 ### Parameters
-- **braindata** : Dataview (e.g. `cortex.Volume`, `cortex.Vertex`, ...)
-    The data to plot. Must be a `Dataview`, not a `Dataset` (raises `TypeError`).
-- **recache** : bool, default `False`
-    Force recreation of cached intermediate flatmap files. Slower, but can fix stale-cache
-    issues after changing an alignment.
-- **pixelwise** : bool, default `True`
-    Use pixel-wise mapping instead of nearest-vertex mapping.
-- **thick** : int, default `32`
-    Number of samples through cortical thickness per pixel. Only used if `pixelwise=True`.
-- **sampler** : {'nearest', 'trilinear', 'gaussian', 'lanczos'}, default `'nearest'`
-    Resampling kernel for pulling values from volumetric data (see `cortex.mapper.samplers`).
-- **height** : int, default `1024`
-    Height in pixels of the output image; width follows the flatmap's aspect ratio.
-- **dpi** : int, default `100`
-    DPI used only for sizing the matplotlib figure in inches, not pixel resolution.
-- **depth** : float, default `0.5`
-    Cortical depth to sample (0=white matter, 1=pial). Used only when `thick <= 1`.
-- **with_rois**, **with_sulci**, **with_labels**, **with_colorbar** : bool
-    Whether to draw ROI outlines, sulcus outlines, layer labels, and a colorbar.
-    Defaults `True`, `False`, `True`, `True`.
-- **with_borders** : bool, default `False`
-    Currently has no effect — accepted but unused in this version of pycortex.
-- **with_dropout** : bool, float, or Dataview, default `False`
-    Overlay hatching for low-signal regions. `True` auto-computes dropout (power=20);
-    a float uses that as the power; a `Dataview` supplies the dropout map directly.
-- **with_curvature** : bool, default `False`
-    Show curvature as a grayscale background layer.
-- **extra_disp** : (str, str), optional
-    `(filename, layer)` — an extra SVG layer to display, from a file structured like
-    `overlays.svg`.
-- **with_connected_vertices** : bool, default `False`
-    Draw lines between distant vertices sharing a voxel. Volumetric data only
-    (raises `ValueError` for vertex data).
+- **braindata** : Dataview (e.g. instance of cortex.Volume, cortex.Vertex, ...)
+    the data you would like to plot on a flatmap
+- **recache** : boolean
+    Whether or not to recache intermediate files. Takes longer to plot this way, potentially
+    resolves some errors. Useful if you've made changes to the alignment
+- **pixelwise** : bool
+    Use pixel-wise mapping
+- **thick** : int
+    Number of layers through the cortical sheet to sample. Only applies for pixelwise = True
+- **sampler** : str
+    Name of sampling function used to sample underlying volume data. Options are 'nearest',
+    'trilinear', 'gaussian', 'lanczos' (see `cortex.mapper.samplers`; the shipped docstring
+    omits 'gaussian').
+- **height** : int
+    Height of the image to render. Automatically scales the width for the aspect
+    of the subject's flatmap
+- **dpi** : int
+    DPI of the generated image. Only applies to the scaling of matplotlib elements,
+    specifically the colormap
+- **depth** : float
+    Value between 0 and 1 for how deep to sample the surface for the flatmap (0 = gray/white
+    matter boundary, 1 = pial surface)
+- **with_rois**, **with_labels**, **with_colorbar**, **with_sulci** : bool, optional
+    Display the rois, labels, colorbar, and sulci. Defaults `True`, `True`, `True`, `False`.
+- **with_borders** : bool, optional
+    Accepted but currently has no effect — unused in this version of pycortex (see Issues).
+- **with_dropout** : bool, float, or Dataview, optional
+    Display annotated flatmap dropout. `True` auto-computes it (power=20); a float is used
+    as the power; a `Dataview` supplies the dropout map directly. Default `False`.
+- **with_curvature** : bool, optional
+    Display curvature. Default `False`.
+- **with_connected_vertices** : bool, optional
+    Draw lines between distant vertices sharing a voxel. Volumetric data only (raises
+    `ValueError` otherwise). Default `False`.
+- **cutout** : str
+    Name of flatmap cutout with which to clip the full flatmap. Should be the name
+    of a sub-layer of the 'cutouts' layer in <filestore>/<subject>/overlays.svg
+- **roi_list** : list, optional
+    Restrict which ROIs are drawn (by name). `None` draws all.
+- **sulci_list** : list
+    List of sulci to include
 - **overlay_file** : str, optional
-    Alternate overlay SVG file to use instead of the subject's default.
-- **linewidth**, **linecolor**, **roifill**, **shadow**, **labelsize**, **labelcolor** :
-  optional
-    Line/fill/label styling for ROIs and sulci. `None` uses `options.cfg` defaults.
-    `shadow` is currently non-functional — any non-`None` value raises `KeyError` (see
-    Issues).
-- **cutout** : str, optional
-    Name of a shape in the overlay's `"cutouts"` layer to crop the figure to.
-- **curvature_brightness**, **curvature_contrast**, **curvature_threshold** : optional
-    Curvature display tuning; `None` uses `options.cfg` defaults.
-- **fig** : Figure or Axes, optional
-    Where to draw. `None` creates a new figure. A `Figure` gets a new axes added on top
-    (existing axes aren't reused); an `Axes` is drawn into directly.
-- **extra_hatch** : (Dataview, (float, float, float)), optional
-    Extra cross-hatch layer, analogous to dropout hatching, driven by any `Dataview`.
+    Custom overlays.svg file to use instead of the subject's default.
+- **linewidth** : int, optional
+    Width of ROI lines. Defaults to roi options in your local `options.cfg`
+- **linecolor** : tuple of float, optional
+    (R, G, B, A) specification of line color
+- **roifill** : tuple of float, optional
+    (R, G, B, A) specification for the fill of each ROI region
+- **shadow** : int, optional
+    Standard deviation of the gaussian shadow. Set to 0 if you want no shadow. **Currently
+    non-functional** — any non-`None` value raises `KeyError` (see Issues).
+- **labelsize** : str, optional
+    Font size for the label, e.g. "16pt"
+- **labelcolor** : tuple of float, optional
+    (R, G, B, A) specification for the label color
+- **curvature_brightness** : float, optional
+    Mean brightness of background. 0 = black, 1 = white. `None` defaults to config file
+    value.
+- **curvature_contrast** : float, optional
+    Contrast of curvature. 1 = maximal contrast (black/white), 0 = no contrast.
+- **curvature_threshold** : bool, optional
+    Whether to apply a threshold to the curvature values to create a binary curvature
+    image. `None` defaults to value specified in the config file
+- **fig** : figure or ax
+    figure into which to plot flatmap. `None` creates a new one; a `Figure` gets a new
+    axes added on top (existing axes aren't reused); an `Axes` is drawn into directly.
+- **extra_disp** : tuple, optional
+    Optional extra display layer from external .svg file: (filename, layer). External svg
+    file should be structured exactly as overlays.svg for the subject.
+- **extra_hatch** : tuple, optional
+    Optional extra crosshatch-textured layer, given as (DataView, [r, g, b]) tuple.
 - **colorbar_ticks** : array-like, optional
-    Tick locations for the colorbar. `None` uses evenly-spaced values between vmin/vmax.
-- **colorbar_location** : {'left', 'center', 'right'} or 4-tuple, default `'center'`
-    Colorbar position; a preset name or `(left, bottom, width, height)` in figure fraction.
-- **roi_list**, **sulci_list** : list of str, optional
-    Restrict which ROIs/sulci are drawn. `None` draws all.
-- **nanmean** : bool, default `False`
-    Ignore NaNs when averaging multiple samples per pixel.
+    For 1D colormaps indicates the ticks of the colorbar. If None, it defaults to equally
+    spaced values between vmin and vmax. Not used for 2D colormaps.
+- **colorbar_location** : str or tuple, optional
+    Location of the colorbar: one of 'left', 'center', 'right' (default 'center'), or a
+    tuple of four floats between 0 and 1 indicating (left, bottom, width, height).
+- **nanmean** : bool, optional (default = False)
+    If True, NaNs in the data will be ignored when averaging across layers.
 
 ### Returns
 - **fig** : `matplotlib.figure.Figure`

@@ -61,11 +61,6 @@ method used whenever channel colors are remapped away from pure R/G/B.
   `channel_vmins` list of the wrong length, which will misalign with the three channels
   downstream, likely producing wrong colors silently rather than raising — see
   `_notes.md`).
-- **`autorange="individual"` is the documented default but the two options ("shared" vs.
-  "individual") are described in `color_voxels`'s docstring but not cross-referenced from
-  `VolumeRGB`'s own docstring** at all — `VolumeRGB.__init__`'s own Parameters section for
-  `autorange` just says "Default is 'individual'" without explaining what the two modes do
-  (that detail exists only in the separate `color_voxels` docstring).
 - **No Returns/Raises sections** on `__init__` (n/a) or on `.alpha` (property, has a
   one-line docstring "Compute alpha transparency" only), `.volume` (has a partial docstring
   but no Raises), `.to_json`.
@@ -93,34 +88,55 @@ Contains RGB(A) colors for each voxel, built from three data channels either pas
 through directly or remapped/combined through HSV color mixing (see Notes).
 
 ### Parameters
-- **channel1**, **channel2**, **channel3** : ndarray or `cortex.Volume`
-    The three data channels. If `Volume` objects, must share `.subject` (and `.xfmname`
-    with `alpha`, if `alpha` is also a `Volume`). If raw arrays, `subject`/`xfmname` are
-    required.
-- **subject**, **xfmname** : str, optional
-    Required only when channels are raw arrays.
-- **alpha** : ndarray or `cortex.Volume`, optional
-    Per-voxel alpha. `None` → fully opaque. Resolved lazily — see `.alpha` property.
-- **description** : str, default `""`
+- **channel1** : ndarray or Volume
+    Array or Volume for the first data channel for each voxel. Can be a 1D or 3D array
+    (see Volume for details), or a Volume.
+- **channel2** : ndarray or Volume
+    Array or Volume for the second data channel for each voxel.
+- **channel3** : ndarray or Volume
+    Array or Volume for the third data channel for each voxel.
+- **subject** : str, optional
+    Subject identifier. Must exist in the pycortex database. If not given, channel1 must
+    be a Volume from which the subject can be extracted.
+- **xfmname** : str, optional
+    Transform name. Must exist in the pycortex database. If not given, channel1 must be a
+    Volume from which the subject can be extracted.
+- **alpha** : ndarray or Volume, optional
+    Array or Volume that represents the alpha component of the color for each voxel. If
+    `None`, all voxels will be assumed to have alpha=1.0. Resolved lazily — see the
+    `.alpha` property.
+- **description** : str, optional
+    String describing this dataset. Displayed in webgl viewer.
 - **state** : optional
-    Opaque viewer-state value; format undocumented in source.
-- **channel1color**, **channel2color**, **channel3color** : 3-tuple of int (0-255), default
-  red/green/blue
-    Target display color for each channel, used only on the "remap" path (see Notes).
-    Presets available in `cortex.dataset.viewRGB.Colors`.
-- **max_color_value** : float in [0, 1], optional
-    Caps HSV brightness of combined colors. `None` defaults to the average channel color's
-    value.
-- **max_color_saturation** : float in [0, 1], default `1.0`
-    Caps HSV saturation of combined colors.
-- **vmin**, **vmax** : float or 3-tuple of float, optional
-    Per-channel bounds mapping to 0/255. A single float applies to all channels; a 3-tuple
-    gives per-channel bounds. Any non-`None` value forces the "remap" path (see Notes).
-- **autorange** : {'individual', 'shared'}, default `'individual'`
-    How auto-bounds are computed when `vmin`/`vmax` are `None`: per-channel percentiles, or
-    pooled across all three channels.
-- **priority** : int, default `1`
-    Display-order priority.
+    Opaque viewer-state value; format undocumented in source (shipped docstring says
+    "TODO: describe what this is").
+- **channel1color** : tuple<uint8, uint8, uint8>
+    RGB color to use for the first data channel. Used only on the "remap" path (see
+    Notes). Presets available in `cortex.dataset.viewRGB.Colors`.
+- **channel2color** : tuple<uint8, uint8, uint8>
+    RGB color to use for the second data channel.
+- **channel3color** : tuple<uint8, uint8, uint8>
+    RGB color to use for the third data channel.
+- **max_color_value** : float [0, 1], optional
+    Maximum HSV value for voxel colors. If not given, will be the value of the average of
+    the three channel colors.
+- **max_color_saturation** : float [0, 1]
+    Maximum HSV saturation for voxel colors.
+- **vmin** : float or tuple of float, optional
+    Lower bound(s) that map to 0 in each color channel. If a single float, the same lower
+    bound is used for all three channels. If a tuple of three floats, each channel uses
+    its respective value. If `None`, the lower bound is auto-determined based on
+    `autorange`. Presence of a non-`None` `vmin`/`vmax` forces the "remap" path (see
+    Notes) even if colors are left at their R/G/B defaults.
+- **vmax** : float or tuple of float, optional
+    Upper bound(s) that map to 255 in each color channel. Same rules as `vmin`.
+- **autorange** : 'shared' or 'individual'
+    How to auto-determine bounds when vmin or vmax is None. 'shared' computes the 1st and
+    99th percentile across all three channels combined. 'individual' computes per-channel
+    1st and 99th percentiles. Overridden when vmin and vmax are both provided. Default is
+    'individual'.
+- **priority** : int, optional
+    Priority for display ordering. Default is 1.
 
 ### Returns
 N/A for `__init__`.

@@ -56,20 +56,30 @@ Contains two vertex maps for simultaneous visualization, jointly colormapped via
 colormap image.
 
 ### Parameters
-- **dim1**, **dim2** : ndarray or `cortex.Vertex`
-    The two data channels — both raw arrays (then `subject` required) or both `Vertex`
-    objects sharing `.subject` (mixing raises `TypeError`).
+- **dim1** : ndarray or Vertex
+    The first vertex map. Can be a 1D array (see Vertex for details), or a Vertex.
+- **dim2** : ndarray or Vertex
+    The second vertex map. Same rules as `dim1`; mixing types, or a Vertex with a
+    mismatched subject, raises `TypeError`.
 - **subject** : str, optional
-    Required only when `dim1`/`dim2` are raw arrays.
-- **description** : str, default `""`
+    Subject identifier. Must exist in the pycortex database. If not given, dim1 must be a
+    Vertex from which the subject can be extracted.
+- **description** : str, optional
+    String describing this dataset. Displayed in webgl viewer.
 - **cmap** : str, optional
-    Name of a 2D colormap image file (see `Volume2D.md`). `None` uses `default_cmap2D`.
-- **vmin**, **vmax** : float, optional
-    Color range for `dim1`. `None` defaults to `dim1.vmin`/`dim1.vmax`.
-- **vmin2**, **vmax2** : float, optional
-    Color range for `dim2`. `None` defaults to `dim2.vmin`/`dim2.vmax`.
+    Name of a 2D colormap **image file**, not a matplotlib colormap (see `Volume2D.md`).
+    If not given defaults to the `default_cmap2d` in your pycortex options.cfg file.
+- **vmin** : float, optional
+    Minimum value in colormap for dim1. If not given defaults to `dim1.vmin` (the shipped
+    docstring says "TODO:WHAT" here — see `Volume2D.md`'s Issues).
+- **vmax** : float, optional
+    Maximum value in colormap for dim1. If not given defaults to `dim1.vmax`.
+- **vmin2** : float, optional
+    Minimum value in colormap for dim2. If not given defaults to `dim2.vmin`.
+- **vmax2** : float, optional
+    Maximum value in colormap for dim2. If not given defaults to `dim2.vmax`.
 - **\*\*kwargs**
-    Forwarded to `Dataview2D.__init__` → `self.attrs` (e.g. `priority`).
+    All additional arguments in kwargs are passed to the VertexData and Dataview.
 
 ### Returns
 N/A for `__init__`.

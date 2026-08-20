@@ -24,6 +24,27 @@ One row per function/class covered. Status column summarizes the single biggest 
 | align | manual | [align/manual.md](align/manual.md) | 🔴 docstring/code drift on `wm_color`/`pial_color` defaults ("blue"/"red" documented vs. actual "yellow"/"blue"); missing-`reference`-on-new-transform path likely raises `UnboundLocalError` |
 | align | automatic | [align/automatic.md](align/automatic.md) | 🟡 one of the better-documented functions found so far (correct Returns); missing Raises, FreeSurfer dependency, and mincost-diagnostic caveat |
 | align | autotweak | [align/autotweak.md](align/autotweak.md) | 🟡 docstring is honest about low usefulness but omits that output is saved as a new `<xfmname>_auto` transform, not overwriting the input |
+| anat | brainmask | [anat/brainmask.md](anat/brainmask.md) | 🔴 no docstring at all; FSL dependency and `AssertionError` failure mode undocumented |
+| anat | whitematter | [anat/whitematter.md](anat/whitematter.md) | 🔴 no docstring; undocumented 3-tier fallback chain (voxelize → FreeSurfer raw_wm → FSL fast) with varying external-tool requirements |
+| anat | voxelize | [anat/voxelize.md](anat/voxelize.md) | 🔴 one-line docstring hardcodes "whitematter" though `surf` is configurable; returned array is transposed relative to the saved file (undocumented) |
+| database | Database | [database/Database.md](database/Database.md) | 🔴 `save_view`'s docstring describes `get_view`'s behavior (backwards); `get_anat`'s docstring is truncated mid-sentence; `get_overlay` has a self-admitted broken code path in a comment; several methods (`get_overlay`, `save_mask`, `get_mask`, `get_cache`, `make_subj`) have no docstring at all |
+| freesurfer | get_paths | [freesurfer/get_paths.md](freesurfer/get_paths.md) | 🟡 `type='slim'` undocumented; returns an unfilled `{name}` template string (undocumented) |
+| freesurfer | autorecon | [freesurfer/autorecon.md](freesurfer/autorecon.md) | 🔴 `parallel`/`n_cores` undocumented; blocking interactive confirmation prompt not mentioned |
+| freesurfer | flatten | [freesurfer/flatten.md](freesurfer/flatten.md) | 🟡 empty Returns section; interactive prompt undocumented |
+| freesurfer | import_subj | [freesurfer/import_subj.md](freesurfer/import_subj.md) | 🔴 re-initializes the global `cortex.db` singleton (undocumented, can cause stale-reference bugs) |
+| freesurfer | import_flat | [freesurfer/import_flat.md](freesurfer/import_flat.md) | 🔴 `auto_overwrite` param entirely undocumented; empty Returns section; mutable default arg |
+| freesurfer | show_surf | [freesurfer/show_surf.md](freesurfer/show_surf.md) | 🔴 deprecated ("probably broken") only via runtime warning, not docstring; most params blank; Mayavi/GUI dependency unstated |
+| freesurfer | make_fiducial | [freesurfer/make_fiducial.md](freesurfer/make_fiducial.md) | 🔴 one-line docstring; hard-codes `smoothwm`; writes into FreeSurfer dir not pycortex db (undocumented) |
+| freesurfer | parse_surf | [freesurfer/parse_surf.md](freesurfer/parse_surf.md) | 🔴 no docstring at all |
+| freesurfer | parse_curv | [freesurfer/parse_curv.md](freesurfer/parse_curv.md) | 🔴 no docstring at all |
+| freesurfer | parse_patch | [freesurfer/parse_patch.md](freesurfer/parse_patch.md) | 🔴 no docstring; structured-array field sign convention only inferable from a different function's body |
+| freesurfer | get_surf | [freesurfer/get_surf.md](freesurfer/get_surf.md) | 🔴 one-line docstring; name collides with two unrelated `get_surf` functions elsewhere in pycortex; 3rd return value's meaning depends on `type` |
+| freesurfer | get_curv | [freesurfer/get_curv.md](freesurfer/get_curv.md) | 🟡 no Returns section; non-`'wm'` type requires a pre-existing file, not generated |
+| freesurfer | write_dot | [freesurfer/write_dot.md](freesurfer/write_dot.md) | 🔴 no docstring; likely broken on NetworkX >= 2.0 (`edges_iter` removed) |
+| freesurfer | read_dot | [freesurfer/read_dot.md](freesurfer/read_dot.md) | 🔴 no docstring; extremely format-fragile hand-rolled `.dot` parser |
+| freesurfer | write_decimated | [freesurfer/write_decimated.md](freesurfer/write_decimated.md) | 🔴 no docstring; likely raises `TypeError` on Python 3 (text/binary file-mode mismatch) |
+| freesurfer | SpringLayout | [freesurfer/SpringLayout.md](freesurfer/SpringLayout.md) | 🔴 no docstring anywhere in class; dead/broken electrostatic-repulsion code path |
+| freesurfer | stretch_mwall | [freesurfer/stretch_mwall.md](freesurfer/stretch_mwall.md) | 🔴 no docstring; mutates `pts` in place (undocumented) |
 
 ---
 *Table is appended module-by-module as work progresses — see `_notes.md` for the checklist
