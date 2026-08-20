@@ -36,20 +36,17 @@ def autotweak(subject, xfmname):
 ## Fixed documentation
 
 ### Summary
-Re-runs FSL's boundary-based registration (FLIRT BBR), initialized from an existing
-`'magnet'`-type transform, to produce a refined alignment — saved as a **new** transform
-named `<xfmname>_auto` (the original `xfmname` transform is left untouched). Per the
-source docstring's own caveat, this doesn't restrict the search range as originally
-intended and "is probably not very useful" — consider `cortex.align.automatic_fsl` or
-`cortex.align.automatic` instead for most use cases.
+Tweak an alignment using the FLIRT boundary-based alignment (BBR) from FSL. Ideally this
+function should use a limited search range, but it doesn't — it's probably not very
+useful. Saves the result as a **new** transform named `<xfmname>_auto` (the original
+`xfmname` is left untouched).
 
 ### Parameters
 - **subject** : str
-    Subject identifier; must exist in the pycortex database.
+    Subject identifier.
 - **xfmname** : str
-    Name of an **existing** transform to use as the initialization for BBR refinement.
-    Must have been saved with `xfmtype='magnet'` (raises an error via
-    `cortex.database.Database.get_xfm` otherwise/if missing).
+    String identifying the transform to be tweaked. Must already exist as a
+    `xfmtype='magnet'` transform.
 
 ### Returns
 `None`.

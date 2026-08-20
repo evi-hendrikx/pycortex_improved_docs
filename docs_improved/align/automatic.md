@@ -54,40 +54,36 @@ referenced here since `automatic`'s own docstring points to it directly.
 ## Fixed documentation
 
 ### Summary
-Automatically computes and saves a functional-to-anatomical alignment transform for
-`subject`, using FreeSurfer's boundary-based registration (`bbregister`), optionally
-initialized via `mri_coreg`, FSL, or an existing transform.
+Perform automatic alignment using Freesurfer's boundary-based registration. The
+`reference` image and resulting transform called `xfmname` are stored in the database.
 
 ### Parameters
 - **subject** : str
-    Subject identifier; must exist in the pycortex database and be a valid,
-    already-`recon-all`'d FreeSurfer subject under `$SUBJECTS_DIR`.
+    Subject identifier.
 - **xfmname** : str
-    Name under which to save the resulting transform in the pycortex database (overwrites
-    an existing transform of the same name without confirmation).
+    Name of the transform to be created and stored in the database.
 - **reference** : str
-    Path to a nibabel-readable reference image (typically a single 3D functional/BOLD
-    volume) to align to the anatomy.
-- **init** : {'coreg', 'fsl', 'header'} or str, default `'coreg'`
-    Initialization strategy before BBR refinement: `'coreg'` uses FreeSurfer's `mri_coreg`
-    (recommended, best default); `'fsl'` uses FSL's FLIRT; `'header'` assumes the images'
-    NIfTI headers already place them close enough (valid only if acquired in the same
-    session/space). Any other string is treated as a filesystem path to an existing
-    DAT/LTA-format transform to use as the initialization — an invalid/nonexistent path
-    here is not validated up front and will only surface as an opaque `bbregister` failure.
+    Path to a nibabel-readable image used as the reference for this transform. Usually a
+    single (3D) functional data volume.
+- **init** : str, default `"coreg"`
+    One of `"coreg"`, `"fsl"`, `"header"`, or a path to a transform from the reference
+    volume to the anatomical volume. `"coreg"` uses Freesurfer's `mri_coreg` and generally
+    performs best; `"fsl"` uses FSL's FLIRT; `"header"` assumes the reference and
+    anatomical are already close (same-session acquisitions). An invalid path here isn't
+    validated up front — it only surfaces as an opaque `bbregister` failure.
 - **epi_mask** : bool, default `False`
-    If `True`, passes `--epi-mask` to `bbregister` to mask out spatially distorted regions;
-    recommended when `reference` was not distortion-corrected.
+    If `True`, passes `--epi-mask` to `bbregister` to mask out spatially distorted areas.
+    Recommended when the reference was not distortion corrected.
 - **intermediate** : str, optional
-    Path to an additional nibabel-readable image used as an intermediate alignment target
-    — useful when `reference` has a restricted field of view but a whole-head image from
-    the same session is available.
-- **reference_contrast** : {'t2', 't1'}, default `'t2'`
-    Contrast convention of `reference`: `'t2'` for BOLD-like images (gray matter brighter
-    than white matter); `'t1'` for the opposite (white matter brighter).
+    Path to a nibabel-readable image used as an intermediate volume for alignment, useful
+    if the reference has a small field-of-view and a whole-brain image from the same
+    session is available.
+- **reference_contrast** : str, default `"t2"`
+    Contrast of the reference image, used to set the `bbregister` contrast flag. `"t2"`
+    (BOLD): gray matter brighter than white matter. `"t1"`: the opposite.
 - **noclean** : bool, default `False`
-    If `True`, keep the temporary working directory (containing `register.dat`,
-    `register.dat.mincost`, etc.) instead of deleting it, and return its path.
+    If `True`, intermediate files are not removed from `/tmp` and the returned value is
+    the temp directory path.
 
 ### Returns
 `None`, unless `noclean=True`, in which case the `str` path to the (not-deleted) temporary
