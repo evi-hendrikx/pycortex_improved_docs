@@ -13,7 +13,7 @@ string `1.3.0.dev0` per `cortex/version.py`).
 ## Progress checklist (by module, per the scope list in the design doc)
 
 - [x] `cortex.quickflat` — make_figure, make_png, make_svg
-- [ ] `cortex.webgl` — show, make_static
+- [x] `cortex.webgl` — show, make_static
 - [ ] `cortex.dataset` — Volume, Volume2D, VolumeRGB, Vertex, Vertex2D, VertexRGB, Dataset
 - [ ] `cortex.align` — manual, automatic, autotweak
 - [ ] `cortex.anat` — brainmask, whitematter, voxelize
@@ -49,6 +49,16 @@ string `1.3.0.dev0` per `cortex/version.py`).
   submodules of `quickflat`, not `quickflat` itself, and aren't re-exported at the
   `cortex.quickflat` package level) but they were read in full to document `make_figure`'s
   effective kwargs chain accurately.
+
+### cortex.webgl
+- No public functions found beyond `show` and `make_static` (matches scope list exactly).
+  `cortex.webgl.serve.JSProxy`/`JSMixer` (the object returned by `show` when a browser
+  client connects) has a genuinely useful public method surface (`getImage`, `makeMovie`,
+  `make_movie_views`, `save_view`, `get_view`, `addData`, `_set_view`, `_capture_view`) but
+  is not itself in the scope list (it's a return value of `show`, defined as a local class
+  inside `show`'s body, not an importable `cortex.webgl.JSMixer`). Summarized inside
+  `webgl/show.md`'s Returns section rather than given its own file, since it isn't a
+  standalone documented class in the module.
 
 ## Patterns repeated across many functions (updated as modules are covered)
 
@@ -99,6 +109,16 @@ string `1.3.0.dev0` per `cortex/version.py`).
   left in the module.
 - **Mutable default argument** `layers=['rois']` in `make_svg`'s signature (Python
   anti-pattern; not currently mutated, so not an active bug, but fragile).
+- **`cortex.webgl.show`'s `layout` parameter has a wrong type hint** (`Optional[str]`) that
+  contradicts its own docstring and actual usage (`None or list of (int, int)`), and
+  contradicts the equivalent, correctly-typed `layout` parameter in `make_static`
+  (`view.py:304` vs. usage patterns matching `make_static`'s `layout=None`).
+  `cortex/webgl/view.py:304`.
+- **`cortex.webgl.make_static`'s `anonymize=True` path does a raw string `.replace(fname,
+  newfname)` on generated JSON file contents** (`view.py:196-197`) to rename subjects inside
+  the CTM metadata JSON — a plain substring replace rather than a structured JSON edit,
+  which is a latent risk (not confirmed to have ever misfired) if a subject's internal name
+  string happens to be a substring of unrelated JSON content.
 
 ## General recommendations for pycortex maintainers
 

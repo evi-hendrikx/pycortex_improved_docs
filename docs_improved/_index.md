@@ -12,6 +12,8 @@ One row per function/class covered. Status column summarizes the single biggest 
 | quickflat | make_figure | [quickflat/make_figure.md](quickflat/make_figure.md) | 🔴 `shadow` kwarg is broken (raises `KeyError`); `with_borders` is a no-op; docstring omits `with_borders`, `with_connected_vertices`, `roi_list`; no Returns/Raises/Examples |
 | quickflat | make_png | [quickflat/make_png.md](quickflat/make_png.md) | 🔴 undocumented full `**kwargs` forwarding to `make_figure`; `thick` documented as own param but only works via kwargs; no Returns/Raises/Examples |
 | quickflat | make_svg | [quickflat/make_svg.md](quickflat/make_svg.md) | 🔴 undocumented `**kwargs` forwarding to `make_flatmap_image`/`get_flatcache` (smaller, different surface than `make_png`); `with_dropout` silently drops numeric power arg; no Returns/Raises/Examples |
+| webgl | make_static | [webgl/make_static.md](webgl/make_static.md) | 🔴 no Returns/Raises/Examples; side effects (files written) understated; `**kwargs`→template forwarding unenumerated |
+| webgl | show | [webgl/show.md](webgl/show.md) | 🔴 no Returns section despite a major behavioral fork (returns a scriptable `JSMixer` client only if `open_browser` is effectively True, else `None`); `layout` type hint wrong (`str` vs list of tuple); `autoclose`/`open_browser` "Default True" wording misleading (actually config-driven) |
 
 ---
 *Table is appended module-by-module as work progresses — see `_notes.md` for the checklist
