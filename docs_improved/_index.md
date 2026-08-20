@@ -76,7 +76,18 @@ One row per function/class covered. Status column summarizes the single biggest 
 | utils | make_movie | [utils/make_movie.md](utils/make_movie.md) | 🔴 name collides with two unrelated "make movie" functions elsewhere in pycortex; unchecked subprocess return code |
 | utils | vertex_to_voxel | [utils/vertex_to_voxel.md](utils/vertex_to_voxel.md) | 🔴 no summary line at all; author's own in-source comment questions whether it's deprecated |
 | utils | get_cmap | [utils/get_cmap.md](utils/get_cmap.md) | 🔴 likely breaks on Matplotlib >= 3.9 (`plt.cm.get_cmap` removed), masked by a bare `except:` into a generic, typo'd error |
+| volume | unmask | [volume/unmask.md](volume/unmask.md) | 🟡 shapes stated only as "array_like"; mask polarity on the returned MaskedArray not spelled out |
+| volume | mosaic | [volume/mosaic.md](volume/mosaic.md) | 🔴 no Returns section (returns a 2-tuple); RGB(A) vs. scalar dtype branching undocumented |
+| volume | epi2anatspace | [volume/epi2anatspace.md](volume/epi2anatspace.md) | 🟡 uses deprecated scipy import path; no Raises section |
+| volume | anat2epispace | [volume/anat2epispace.md](volume/anat2epispace.md) | 🟡 same scipy-import issue; scope-list duplicate with `cortex.utils` (documented once here) |
+| volume | epi2anatspace_fsl | [volume/epi2anatspace_fsl.md](volume/epi2anatspace_fsl.md) | 🔴 unconditionally raises `NotImplementedError` — docstring gives no hint the function is dead |
+| volume | anat2epispace_fsl | [volume/anat2epispace_fsl.md](volume/anat2epispace_fsl.md) | 🔴 hard-codes `"fsl5.0-flirt"` binary name instead of configurable `fsl_prefix` — likely fails on modern FSL installs |
+| volume | show_slice | [volume/show_slice.md](volume/show_slice.md) | 🔴 no docstring; interactive mouse controls (scroll/click) entirely undocumented |
+| volume | show_mip | [volume/show_mip.md](volume/show_mip.md) | 🟡 one-line docstring; no Returns section, no explanation of which axis each subplot projects |
+| volume | show_glass | [volume/show_glass.md](volume/show_glass.md) | 🔴 confirmed broken — unconditional `NameError` (undefined `subject`) followed by unconditional `NotImplementedError` |
+| xfm | Transform | [xfm/Transform.md](xfm/Transform.md) | 🔴 `__init__`/`__call__`/`.inv`/`__mul__`/`.save` all undocumented; edge case leaves `.shape` unset for an unreadable string reference |
 
 ---
-*Table is appended module-by-module as work progresses — see `_notes.md` for the checklist
-of remaining modules.*
+*77 functions/classes documented across 15 modules — project complete. See `_notes.md` for
+cross-cutting patterns, scope discrepancies, and a prioritized list of confirmed code bugs
+found along the way (flagged only, not fixed, per project scope).*

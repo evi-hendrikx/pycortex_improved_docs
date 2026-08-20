@@ -31,23 +31,12 @@ string `1.3.0.dev0` per `cortex/version.py`).
       get_ctmpack, get_dropout, get_hemi_masks, get_roi_mask, get_roi_masks, get_roi_verts,
       get_vox_dist, make_movie, vertex_to_voxel (anat2epispace documented under
       cortex.volume — see discrepancy note below)
-- [ ] `cortex.anat` — brainmask, whitematter, voxelize
-- [ ] `cortex.database` — Database
-- [ ] `cortex.freesurfer` — get_paths, autorecon, flatten, import_subj, import_flat,
-      show_surf, make_fiducial, parse_surf, parse_curv, parse_patch, get_surf, get_curv,
-      write_dot, read_dot, write_decimated, SpringLayout, stretch_mwall
-- [ ] `cortex.mapper` — Mapper, get_mapper
-- [ ] `cortex.mni` — compute_mni_transform, transform_to_mni, transform_surface_to_mni,
-      transform_mni_to_subject
-- [ ] `cortex.polyutils` — Surface, Distortion
-- [ ] `cortex.segment` — init_subject, fix_wm, fix_pia, cut_surface
-- [ ] `cortex.surfinfo` — curvature, distortion, thickness, tissots_indicatrix, flat_border
-- [ ] `cortex.utils` — add_roi, anat2epispace, get_aseg_mask, get_cmap, get_cortical_mask,
-      get_ctmmap, get_ctmpack, get_dropout, get_hemi_masks, get_roi_mask, get_roi_masks,
-      get_roi_verts, get_vox_dist, make_movie, vertex_to_voxel
-- [ ] `cortex.volume` — unmask, mosaic, epi2anatspace, anat2epispace, epi2anatspace_fsl,
+- [x] `cortex.volume` — unmask, mosaic, epi2anatspace, anat2epispace, epi2anatspace_fsl,
       anat2epispace_fsl, show_slice, show_mip, show_glass
-- [ ] `cortex.xfm` — Transform
+- [x] `cortex.xfm` — Transform
+
+**All modules in the scope list are now complete — 77 per-function/class files across 15
+modules, plus this file and `_index.md`.**
 
 ## Discrepancies vs. the scope list (found while reading source)
 
@@ -179,6 +168,21 @@ string `1.3.0.dev0` per `cortex/version.py`).
   standalone files.
 - Otherwise matches the scope list.
 
+### cortex.volume
+- Matches the scope list, modulo the `anat2epispace` duplicate-listing-under-`cortex.utils`
+  discrepancy noted above. `detrend_median`, `detrend_gradient`, `detrend_poly`, `fslview`
+  also exist as public functions in `cortex/volume.py` but are **not** in the scope list —
+  not given standalone files.
+- This module has **two confirmed-broken functions** (`epi2anatspace_fsl`, `show_glass`)
+  and one with a likely-fatal portability bug (`anat2epispace_fsl`'s hard-coded FSL binary
+  name) — proportionally the highest concentration of actually-broken (not just
+  under-documented) code found in any single module in this project.
+
+### cortex.xfm
+- Matches the scope list (`Transform`). `isstr`, `decode`, `_x_flipper`, `_vox2ras_tkr`
+  are module-level helpers, not given standalone files (the latter two are private-ish
+  utility functions, referenced from `Transform.md` where relevant).
+
 ## Patterns repeated across many functions (updated as modules are covered)
 
 - **Undocumented `**kwargs` forwarding chains** are pervasive in `cortex.quickflat`:
@@ -277,6 +281,38 @@ string `1.3.0.dev0` per `cortex/version.py`).
   (`freesurfer.py:1049,1078-1083,1086-1087`).
 - **`cortex.freesurfer.stretch_mwall` mutates its `pts` argument in place** with no
   docstring warning of this (`freesurfer.py:1107-1113`).
+- **`cortex.xfm.Transform.__init__` never sets `.shape` if `reference` is a string that
+  `nibabel.load` cannot open** (`xfm.py:16-22`, the `except IOError:` branch sets
+  `self.reference = reference` but has no corresponding `self.shape = ...` line) — any
+  later access to `.shape` (used by `.inv`, `__mul__`, `__rmul__`) raises
+  `AttributeError`.
+- **`cortex.volume.show_glass` is confirmed broken**: references an undefined name
+  `subject` (`volume.py:198`, `NameError` on every call — the actual parameter is
+  `dataview`), and even past that would hit an unconditional `raise NotImplementedError`
+  (`volume.py:209`) with a comment explaining the author gave up on it; a third,
+  independent issue is that the (unreachable) code passes `'fiducial'` as an anatomical
+  `type` to `Database.get_anat`, which isn't a valid anatomical-volume type name.
+- **`cortex.volume.epi2anatspace_fsl` is explicitly self-documented as broken**
+  (`"This function is currently broken! do not use it!"`) and unconditionally raises
+  `NotImplementedError` (`volume.py:278-279`) before any of its ~40 lines of otherwise-
+  plausible FSL-calling code run.
+- **`cortex.volume.anat2epispace_fsl` hard-codes the FSL binary name `"fsl5.0-flirt"`**
+  (`volume.py:352`) instead of using the configurable `[basic] fsl_prefix` convention
+  used elsewhere in pycortex (e.g. `cortex.align`) — likely fails outright on any FSL
+  install that only provides a plain `flirt` binary. Also leaves a temporary `.mat`
+  transform file uncollected on disk.
+- **`cortex.utils.get_roi_masks`'s `fail_for_missing_rois=False` fallback branch does
+  `roi_verts.keys()+['Cortex']`** (`utils.py:784`) — `dict.keys()` returns a `dict_keys`
+  view in Python 3, which doesn't support `+` with a list; likely raises `TypeError` when
+  this branch is actually exercised (a missing ROI with `fail_for_missing_rois=False`).
+- **`cortex.utils.get_cmap` likely breaks on Matplotlib >= 3.9**: uses
+  `plt.cm.get_cmap(name)` (`utils.py:1166`), removed in Matplotlib 3.9 (deprecated since
+  3.7) in favor of `matplotlib.colormaps[name]`; the resulting `AttributeError` is
+  swallowed by a bare `except:` (`utils.py:1167`) into a generic, typo'd
+  `Exception('Unkown color map!')`, masking the real cause.
+- **`cortex.utils.get_aseg_mask`'s docstring references `cortex.freesurfer.fs_aseg_mask`**,
+  which doesn't exist — the actual dict is `fs_aseg_dict` (`utils.py:27` imports
+  `fs_aseg_dict`; docstring at `utils.py:615` says `fs_aseg_mask`).
 - **`cortex.surfinfo.flat_border` unconditionally raises `NameError`** — references a
   bare name `height` (`surfinfo.py:204`) that is never defined as a parameter, local
   variable, import, or module global anywhere in `cortex/surfinfo.py`. Every call to this
@@ -311,17 +347,15 @@ string `1.3.0.dev0` per `cortex/version.py`).
   passing any single styling argument (even one that seems unrelated, like `autorange=
   "shared"` with default colors and no vmin/vmax) silently switches the whole class's
   numeric interpretation of the input data. Same logic duplicated in `VertexRGB`.
-- **`cortex.webgl.show`'s `layout` parameter has a wrong type hint** (`Optional[str]`) that
-  contradicts its own docstring and actual usage (`None or list of (int, int)`), and
-  contradicts the equivalent, correctly-typed `layout` parameter in `make_static`
-  (`view.py:304` vs. usage patterns matching `make_static`'s `layout=None`).
-  `cortex/webgl/view.py:304`.
+- **`cortex.webgl.show`'s `layout` parameter has a wrong type hint** (`Optional[str]`,
+  `cortex/webgl/view.py:304`) that contradicts its own docstring and actual usage (`None
+  or list of (int, int)`), and contradicts the equivalent, correctly-typed `layout`
+  parameter in `make_static`.
 - **`cortex.webgl.make_static`'s `anonymize=True` path does a raw string `.replace(fname,
   newfname)` on generated JSON file contents** (`view.py:196-197`) to rename subjects inside
   the CTM metadata JSON — a plain substring replace rather than a structured JSON edit,
   which is a latent risk (not confirmed to have ever misfired) if a subject's internal name
   string happens to be a substring of unrelated JSON content.
-
 - **`cortex.mni`'s three FSL-calling functions (`compute_mni_transform`,
   `transform_to_mni`, `transform_mni_to_subject`) never check `subprocess.call`'s return
   code**, and each leaves one or more `tempfile.mktemp()`-created files uncollected on
@@ -331,21 +365,72 @@ string `1.3.0.dev0` per `cortex/version.py`).
 
 ## General recommendations for pycortex maintainers
 
-(Running list — will be expanded as more modules are covered.)
-
-1. Adopt a project-wide convention of documenting `**kwargs` forwarding targets explicitly
-   (e.g. "Other Parameters: see `cortex.quickflat.make_figure`, forwarded via `**kwargs`")
-   rather than silently inlining a subset of the target function's parameters as if they
-   belonged to the wrapper.
-2. Add `Returns`, `Raises`, and `Examples` sections consistently — none of the functions
-   reviewed so far in `cortex.quickflat` have any of the three.
-3. Fix or remove the `shadow` parameter in `cortex.quickflat` (currently broken for any
-   non-`None` value).
-4. Either implement or remove `with_borders` in `make_figure`.
-5. Consider whether `cortex.quickflat.view.make_movie`, which is unreachable
-   (`NotImplementedError` on the first line), should be removed entirely or actually
-   finished.
+1. **Adopt a project-wide convention for documenting `**kwargs` forwarding chains** —
+   e.g. "Other Parameters: see `cortex.quickflat.make_figure`, forwarded via `**kwargs`"
+   — rather than silently inlining a subset of the target function's parameters as if
+   they belonged to the wrapper, or omitting the forwarding target entirely. This is the
+   single most common documentation gap found across the whole project (quickflat, webgl,
+   utils, segment all have it).
+2. **Add `Returns`, `Raises`, and `Examples` sections consistently.** The large majority
+   of functions reviewed have none of the three; a handful of modules (`cortex.mni`,
+   `polyutils.Distortion`, several `cortex.database`/`cortex.dataset` methods) are
+   exceptions worth using as the house-style template.
+3. **Prioritize fixing the confirmed-broken functions** found during this review — these
+   are code bugs, not documentation gaps, and are listed in full under "Possible code
+   issues" above. In rough order of how likely a user is to hit them:
+   - `cortex.surfinfo.flat_border` — always raises `NameError` (undefined `height`).
+   - `cortex.volume.show_glass` — always raises `NameError`, then would hit
+     `NotImplementedError` even if fixed.
+   - `cortex.volume.epi2anatspace_fsl` — self-documented as broken, always raises
+     `NotImplementedError`.
+   - `cortex.volume.anat2epispace_fsl` — hard-coded `fsl5.0-flirt` binary name, likely
+     fails on any modern FSL install.
+   - `cortex.utils.get_cmap` — likely broken on Matplotlib >= 3.9 (`plt.cm.get_cmap`
+     removed), masked by a bare `except:`.
+   - `cortex.freesurfer.write_dot` / `write_decimated` — removed NetworkX 1.x API /
+     text-vs-binary file mode bug, respectively.
+   - `cortex.quickflat.make_figure`'s `shadow` parameter — `KeyError` for any non-`None`
+     value.
+   - `cortex.utils.get_roi_masks` — likely `TypeError` in one fallback branch
+     (`dict_keys + list`).
+   - `cortex.segment.cut_surface` — likely `TypeError` when `flatten_with="SLIM"` (typo'd
+     `"slip"`).
+4. **Several functions are dead/unfinished code** (`raise NotImplementedError` as
+   effectively the entire function body): `cortex.quickflat.view.make_movie`,
+   `cortex.dataset.views.Multiview.__init__`, `cortex.polyutils.Surface.edge_collapse`,
+   `cortex.volume.epi2anatspace_fsl`, `cortex.volume.show_glass`. Consider removing these
+   from the public API (or finishing them) rather than leaving them as attractive-looking
+   but non-functional entries in the API reference.
+5. **Two docstrings describe the wrong function**: `cortex.database.Database.save_view`
+   describes `get_view`'s behavior (and vice versa is fine — `get_view`'s text happens to
+   be correct for itself); `cortex.utils.get_aseg_mask` references a nonexistent
+   `fs_aseg_mask` attribute (should be `fs_aseg_dict`). Both are quick fixes.
+6. **Two deprecation warnings point to nonexistent replacements**:
+   `cortex.segment.fix_wm`/`fix_pia` recommend a `rerun_recon()` function that doesn't
+   exist anywhere in the codebase.
+7. **Fix or remove the `shadow` parameter in `cortex.quickflat`** (currently broken for
+   any non-`None` value) and **either implement or remove `with_borders`** in
+   `make_figure`.
+8. **Name collisions are a recurring source of confusion**: three unrelated
+   `get_surf` functions exist (`cortex.freesurfer.get_surf`, `cortex.database.
+   Database.get_surf`, `cortex.dataset.Dataset.get_surf`); `Volume.map` and `Vertex.map`
+   do unrelated things; three unrelated "make movie" functions exist
+   (`cortex.utils.make_movie`, `cortex.quickflat.view.make_movie` [dead],
+   `JSMixer.makeMovie`/`.make_movie_views`). Consider renaming or at minimum
+   cross-referencing these in their docstrings.
+9. **Several functions/classes have literally empty docstrings** (`"""\n    """`) —
+   concentrated almost entirely in `cortex.freesurfer` (`parse_surf`, `parse_curv`,
+   `parse_patch`, `write_dot`, `read_dot`, `write_decimated`, `SpringLayout`) and
+   `cortex.anat`/`cortex.volume`/`cortex.database` (`brainmask`, `whitematter`,
+   `show_slice`, `get_overlay`, `save_mask`, `get_mask`, `get_cache`, `make_subj`). These
+   are the highest-value targets for a first documentation pass, since even a short
+   summary would be a large relative improvement.
+10. **Mutable default arguments** appear in a few places (`cortex.quickflat.make_svg`'s
+    `layers=['rois']`, `cortex.freesurfer.import_flat`'s `hemis=['lh', 'rh']`) — not
+    currently mutated, so not active bugs, but fragile against future edits.
 
 ---
-*This file is updated incrementally as each module is completed — see the progress
-checklist above for current status.*
+*Project complete: all 77 in-scope functions/classes documented across 15 modules. See
+`_index.md` for the full per-function table and this file's "Possible code issues" section
+above for every confirmed or suspected code bug found along the way (none were fixed, per
+project scope).*
