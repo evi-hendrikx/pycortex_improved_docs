@@ -14,6 +14,8 @@ independent values per vertex can be shown separately with an ordinary 1D
 colormap, or combined into one flatmap with a 2D colormap (see
 :doc:`colormaps`) — cycling through all three below:
 
+.. # TODO: update example with Mark's fake data version
+
 .. image:: flatmap_comparison.gif
    :width: 90%
    :align: center
@@ -54,7 +56,7 @@ The core mental model
 ----------------------
 
 
-**Phase 1 — one-time setup, per subject:**
+**Phase 1: one-time setup, per subject**
 
 Pycortex is for taking a data array that you
 have and displaying it, richly and interactively, on the
@@ -64,42 +66,62 @@ least one functional-to-anatomical transform into the pycortex
 :term:`filestore` in the layout :doc:`database` expects. An example of this 
 minimal layout is given in :ref:`minimal-filestore-contents`.
 
-The flow below (FreeSurfer's ``recon-all`` followed by pycortex's own
-import/segmentation and alignment steps) is the one this documentation
-assumes and walks through, but it's not the only route to get there. 
-Any pipeline that ends with correctly-formatted surface and transform
-files in those locations works equally well, including importing a
-FreeSurfer subject processed elsewhere (e.g. by a wrapper like
-fMRIPrep) or bringing in a transform your own preprocessing already
-computed (see :doc:`transforms`).
+Every path below ends at the same place: surfaces + a transform in the filestore. 
+The difference is how much of that already exists for you.
 
-.. fMRIPrep stores the affine transform between the anatomical (T1w) and FreeSurfer surface (fsnative) spaces in each subject's anat folder, under <fmriprep_output>/sub-<label>/anat/. The relevant files are sub-<label>_from-T1w_to-fsnative_mode-image_xfm.txt and its inverse, sub-<label>_from-fsnative_to-T1w_mode-image_xfm.txt. Both are plain-text 4x4 affine matrices, so they can be loaded directly with numpy.loadtxt and passed to pycortex's transform-saving functions without any additional parsing.
+*I ran FreeSurfer's recon-all*
 
-.. If BOLD data was resampled into T1w space at run time (--output-spaces T1w), this transform isn't needed at all — the functional and anatomical volumes already share the same grid, so the pycortex xfm can simply be the identity matrix. The from-T1w_to-fsnative file only becomes necessary if you're working with native-space (unresampled) functional data and need to align it to the FreeSurfer surface yourself.
+* **Surfaces**: You have raw surfaces. Import via ``cortex.freesurfer.import_subj``. 
 
-.. code-block:: text
+* **Transform**: Compute a transforms with ``cortex.align.automatic``
 
-    FreeSurfer recon-all (external)
-            │  anatomical MRI -> segmented white/pial surfaces
-            ▼
-    cortex.freesurfer.import_subj  /  cortex.segment.*
-            │  builds fiducial, inflated, and cut+flattened surfaces,
-            │  saved into the filestore under the subject's name
-            ▼
-    cortex.align.automatic (or automatic_fsl) / cortex.align.manual
-            │  reads the subject's fiducial surface back out of the
-            │  filestore, registers a functional (EPI) reference image
-            │  to it, and saves the resulting transform back into the
-            │  filestore under a name (xfmname)
+*I ran fMRIPrep*
 
-Getting from a raw anatomical scan to cut,
-flattened surfaces in the filestore involves external FreeSurfer
-processing (``recon-all``) plus several pycortex-side steps
-(``cortex.segment.cut_surface``, choice of a flattening backend, then
-import) — see :doc:`segmentation_guide` for the full, current procedure.
+* **Surfaces**: You have raw surfaces. Import via ``cortex.freesurfer.import_subj``. If you used default locations, point cortex.freesurfer.import_subj at fMRIPrep's freesurfer/sub-<label> output directory 
 
-**Phase 2 — every time you have data to look at (this is most of what
-pycortex does):**
+* **Transform**: fMRIPrep already computed a transform for you
+
+  * If you requested BOLD output in T1w space (--output-spaces T1w), your functional data already shares a grid with the anatomy. The transform is the identity matrix. 
+
+  * If you're using native-space BOLD instead, fMRIPrep provides the alignment you need at anat/sub-<label>_from-T1w_to-fsnative_mode-image_xfm.txt.
+
+
+*I have AFNI data*
+
+AFNI's BRIK/HEAD volumes and alignment matrices aren't natively read by pycortex, 
+so this path needs one conversion step before the usual flow applies:
+
+* **Surfaces**: AFNI itself doesn't typically produce cortical surface reconstructions. Most AFNI users get surfaces via SUMA/FreeSurfer underneath.  If you have a FreeSurfer subject directory from that step, import it the normal way with ``cortex.freesurfer.import_subj``.
+
+.. # TODO what if SUMA
+* **Volume data**: BRIK/HEAD can be read directly with nibabel, so no custom parser is needed. Just make sure the resulting array + affine are passed into pycortex's Volume object as you would  any NIfTI-derived data.
+
+* **Transform**: if you already have an alignment matrix from 3dAllineate or @auto_tlrc, convert it into a plain 4x4 array and load it the same way as any other transform (see Transform formats). Otherwise, run cortex.align.automatic against your EPI reference image as usual.
+
+*I have BrainVoyager data*
+
+BrainVoyager uses its own native mesh and volume formats, so this path needs format conversion before either surfaces or transforms can go into the filestore:
+
+* **Surfaces**: BrainVoyager's .srf mesh files need to be converted into a format pycortex's importer reads (FreeSurfer binary or GIFTI) before running cortex.freesurfer.import_subj. 
+
+.. code-block::
+  import bvbabel
+  import nibabel.freesurfer.io as fsio
+
+  # 1. Read the BrainVoyager mesh
+  header, vertices, faces = bvbabel.srf.read_srf("subject_cortex.srf")
+
+  # 2. Write it out in FreeSurfer's binary surface format
+  fsio.write_geometry("lh.pial", vertices, faces)
+
+
+* **Volume data**: VMR/VTC files can be read with the bvbabel library; the resulting array and affine can then be used to build a pycortex Volume object as usual.
+
+* **Transform**: BrainVoyager's .trf alignment files need to be converted to a plain 4x4 matrix before they can be loaded as a transform. As with AFNI, cortex.align.automatic remains an option if you'd rather compute the alignment directly from your EPI reference image instead of converting an existing one.
+
+
+**Phase 2: every time you have data to look at (this is most of what
+pycortex does)**
 
 .. code-block:: text
 
@@ -132,7 +154,7 @@ them. For a single script that runs this whole diagram top to bottom
 using nothing but the bundled ``S1`` subject, see
 :ref:`sphx_glr_auto_examples_quickstart_plot_pipeline_overview.py`.
 
-**Phase 3 — have fun exploring!:**
+**Phase 3: have fun exploring!**
 
 Once the basics work, a good chunk of pycortex isn't about producing one
 final figure — it's tools for poking at your data and your surfaces.
