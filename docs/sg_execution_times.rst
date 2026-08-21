@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**04:18.004** total execution time for 51 files **from all galleries**:
+**00:14.539** total execution time for 49 files **from all galleries**:
 
 .. container::
 
@@ -32,11 +32,11 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_webgl_plot_panels_headless.py` (``../examples/webgl/plot_panels_headless.py``)
-     - 04:18.004
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_datasets_plot_data_with_alpha.py` (``../examples/datasets/plot_data_with_alpha.py``)
-     - 00:00.000
+     - 00:10.096
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_quickflat_plot_thickness_nanmean.py` (``../examples/quickflat/plot_thickness_nanmean.py``)
+     - 00:04.443
      - 0.0
    * - :ref:`sphx_glr_auto_examples_datasets_plot_dataset_arithmetic.py` (``../examples/datasets/plot_dataset_arithmetic.py``)
      - 00:00.000
@@ -96,9 +96,6 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_quickflat_plot_sulci.py` (``../examples/quickflat/plot_sulci.py``)
-     - 00:00.000
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_quickflat_plot_thickness_nanmean.py` (``../examples/quickflat/plot_thickness_nanmean.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_quickflat_plot_zoom_to_roi.py` (``../examples/quickflat/plot_zoom_to_roi.py``)
@@ -167,13 +164,10 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_webgl_dynamic_with_custom_template.py` (``../examples/webgl/dynamic_with_custom_template.py``)
      - 00:00.000
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_webgl_make_code_vlog.py` (``../examples/webgl/make_code_vlog.py``)
-     - 00:00.000
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_webgl_make_vlog.py` (``../examples/webgl/make_vlog.py``)
-     - 00:00.000
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_webgl_multiple_datasets.py` (``../examples/webgl/multiple_datasets.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_webgl_plot_panels_headless.py` (``../examples/webgl/plot_panels_headless.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_webgl_single_dataset.py` (``../examples/webgl/single_dataset.py``)

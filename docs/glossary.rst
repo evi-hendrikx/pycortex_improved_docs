@@ -64,7 +64,11 @@ below links to the page that explains it in full.
         A boolean array selecting which voxels of a functional volume count
         as "cortex" for a given subject/transform pair, used to reduce a
         full 3D/4D functional volume down to the much smaller set of voxels
-        near the cortical surface. See :ref:`the Masks section <database-masks>` of :doc:`database`.
+        near the cortical surface. pycortex ships five named mask types
+        (``'nearest'``, ``'thin'``, ``'cortical'``, ``'line_nearest'``,
+        ``'thick'``), trading off how close a voxel must be to the surface
+        to count. See :ref:`the Masks section <database-masks>` of
+        :doc:`database`.
 
     pixel-wise sampling
         Pycortex's method of mapping functional volume data onto the
