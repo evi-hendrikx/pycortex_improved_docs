@@ -1,6 +1,8 @@
 In-browser ROI and sulcus drawing
 =================================
 
+See :doc:`rois` for why pycortex represents ROIs as SVG overlays in the first place.
+
 `pycortex-roidraw <https://github.com/gallantlab/pycortex-roidraw>`_ is a drop-in add-on that
 lets you draw, edit, and export ROIs and sulci directly in a pycortex WebGL viewer — no Inkscape
 and no re-generation of the viewer required. You draw on the flattened cortical surface; the

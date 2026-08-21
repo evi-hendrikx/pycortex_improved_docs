@@ -47,7 +47,3 @@ stream = io.BytesIO()
 cortex.quickflat.make_gif(stream, volumes, frame_duration=1.5, colorbar_location="right")
 
 Image(stream.read())
-
-
-################################################################################
-# .. image:: ../../flatmap_comparison.gif

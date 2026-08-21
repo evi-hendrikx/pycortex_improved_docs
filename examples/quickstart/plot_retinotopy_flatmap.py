@@ -14,6 +14,11 @@ command that is included.
 S1 is the example subject that comes with pycortex, but if you want to plot
 data onto a different subject, you will need to have them in your filestore,
 and you will also need a flatmap for them.
+
+S1's surfaces are already bundled with your pycortex install (see the
+:doc:`/overview` page and its glossary), so the download below is only
+fetching the retinotopy *data* — you don't need to import or align
+anything before running this example.
 """
 import cortex
 import matplotlib.pyplot as plt

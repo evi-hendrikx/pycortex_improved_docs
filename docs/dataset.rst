@@ -33,14 +33,16 @@ If you already have a Nifti file aligned to a transform in the database::
 
 Overview
 --------
-Pycortex's main data structures consists of the :class:`Dataset`, and the Dataview classes :class:`Volume`, :class:`Vertex`, :class:`VolumeRGB`, :class:`VertexRGB`, :class:`Volume2d`, :class:`Vertex2D`.
+Pycortex's main data structures consists of the :class:`Dataset`, and the Dataview classes :class:`Volume`, :class:`Vertex`, :class:`VolumeRGB`, :class:`VertexRGB`, :class:`Volume2D`, :class:`Vertex2D`.
 
     * :class:`Dataset` objects store a collection of :class:`Dataview` objects with associated names. It provides additional functionality to store and load the DataViews as HDF files.
 
     * :class:`Volume` is a :class:`Dataview` object that holds either a single or a time series of volumetric data (IE the data is in the original volume space).
     * :class:`Vertex` is a :class:`Dataview` object that holds either a single or a time series of vertex data (IE the data has been projected onto the surface vertices).
     * :class:`VolumeRGB` is a :class:`Dataview` object that contains 3 or 4 :class:`Volume` objects corresponding to the red, green, blue, and optionally alpha channels of a raw dataview.
+    * :class:`VertexRGB` is the :class:`Vertex` counterpart of :class:`VolumeRGB`: 3 or 4 :class:`Vertex` objects corresponding to the red, green, blue, and optionally alpha channels of a raw dataview.
     * :class:`Volume2D` is a :class:`Dataview` object that holds a pair of volumetric data, to be displayed using a 2D colormap.
+    * :class:`Vertex2D` is the :class:`Vertex` counterpart of :class:`Volume2D`: a pair of vertex dataviews, to be displayed using a 2D colormap.
 
 Dataviews
 ---------
@@ -50,7 +52,7 @@ Dataview is a parent class that is instantiated in the form of one of the follow
     * **vmin** / **vmax**: colormap minimum and maximums, same as in imshow.
     * **description**: A text description of the data view. This is shown as a subheading in the webgl view.
     * **priority**: Priority of this data view when included with others in a :class:`Dataset`.
-    * Other kwargs: Additional string-based attributes are saved here. For example, additional quickflat options can be specified here, to be automatically applied during the :method:`cortex.quickflat.make_figure` command. webgl views currently do not support any other view options.
+    * Other kwargs: Additional string-based attributes are saved here. For example, additional quickflat options can be specified here, to be automatically applied during the :func:`cortex.quickflat.make_figure` command. webgl views currently do not support any other view options.
 
 In all following examples, **kwargs** contains these options.
 
@@ -82,6 +84,13 @@ Generally, the :class:`Volume` class will automatically understand masked data, 
 
 Volume and Vertex objects can also be implicitly defined using a tuple syntax, as highlighted in the quickstart above.
 
+See :ref:`sphx_glr_auto_examples_datasets_plot_volume.py`,
+:ref:`sphx_glr_auto_examples_datasets_plot_vertex.py`, and
+:ref:`sphx_glr_auto_examples_datasets_plot_volume_to_vertex.py` (mapping
+volume data onto vertices) for runnable examples, and
+:ref:`sphx_glr_auto_examples_datasets_plot_dataset_arithmetic.py` for the
+numpy-style operations mentioned above.
+
 RGB data
 ~~~~~~~~
 If you have data which does not require colormapping, it is possible to directly plot them using an RGB dataview. The calling signature looks like this::
@@ -93,27 +102,26 @@ You can provide either numpy arrays or :class:`Volume` objects for the red, gree
 
 If you provided either numpy arrays or :class:`Volume` objects without vmin/vmax, the data will be normalized and cast to uint8 in order to display them. This means that the data will automatically be scaled between 0-255 and quantized. If your data is already normalized between 0 and 1, this will not occur.
 
+See :ref:`sphx_glr_auto_examples_datasets_plot_volumeRGB.py` and
+:ref:`sphx_glr_auto_examples_datasets_plot_vertexRGB.py` for runnable
+examples, and :ref:`sphx_glr_auto_examples_datasets_plot_data_with_alpha.py`
+for using the alpha channel to control transparency.
+
 2D dataviews
 ~~~~~~~~~~~~
-This helper class lets you specify a pair of :class:`Volume` (or :class:`Vertex`) objects to be plotted using a 2D colormap, both in webgl and in quickflat. To declare a 2D dataview::
+This helper class lets you specify a pair of :class:`Volume` (or :class:`Vertex`) objects to be jointly plotted using a 2D colormap, e.g. to show one variable as hue and a second as saturation/alpha. Both :func:`cortex.webgl.show` and :func:`cortex.quickflat.make_figure` support 2D dataviews. To declare a 2D dataview::
 
     dim1 = cortex.Volume.random(subject, xfmname)
     dim2 = cortex.Volume.random(subject, xfmname)
-    twod = cortex.Volume2D(dim1, dim2, subject=None, xfmname=None, vmin2=None, vmax2=None, alpha=None, **kwargs)
+    twod = cortex.Volume2D(dim1, dim2, subject=None, xfmname=None, vmin2=None, vmax2=None, **kwargs)
 
-The optional ``alpha`` (an array in [0, 1], or a :class:`Volume`/:class:`Vertex` normalized by its own ``vmin``/``vmax``) is a per-voxel opacity that is multiplied into the alpha channel of the 2D colormap. Many bundled 2D colormaps (``*_alpha``) already encode opacity along their second axis; ``alpha`` is useful when both colormap axes are needed for data.
+There is a :class:`Vertex2D` counterpart with the same call signature for vertex data::
 
-NaN and transparency
-~~~~~~~~~~~~~~~~~~~~
-A NaN anywhere at a voxel or vertex means that its value is undefined, and pycortex renders it fully transparent so that the curvature shows through. This holds for every dataview type and for both renderers (quickflat and the webgl viewer):
+    vtwod = cortex.Vertex2D(vert1, vert2, subject=None, vmin2=None, vmax2=None, **kwargs)
 
-    * :class:`Volume` / :class:`Vertex`: NaN data is transparent.
-    * :class:`Volume2D` / :class:`Vertex2D`: NaN in *either* dimension, or in the ``alpha`` map, is transparent.
-    * :class:`VolumeRGB` / :class:`VertexRGB`: NaN in *any* color channel, or in the ``alpha`` channel, is transparent.
-
-Where there is no NaN, the opacity (2D colormap alpha, ``alpha=`` keyword, RGB alpha channel) is honored as given. In the webgl viewer, NaN masks and opacity belong to each dataview and are not carried over when switching between datasets.
-
-When several voxels contribute to one pixel (quickflat averages across cortical thickness; the webgl viewer when ``layers`` > 1), NaN voxels are left out of the average by default and the pixel is transparent only if every contributing voxel is NaN. This is ``nanmean=True`` in :func:`cortex.quickflat.make_figure` and the ``nanmean`` toggle in the webgl surface controls; switch either off to make any NaN contribution transparent. For :class:`VolumeRGB` / :class:`VertexRGB` the NaN has already become alpha 0 when the data is converted to RGBA, so there fully transparent voxels count as missing: ``nanmean`` skips them, and switching it off gives the alpha-weighted average instead.
+See :ref:`sphx_glr_auto_examples_datasets_plot_volume2D.py` and
+:ref:`sphx_glr_auto_examples_datasets_plot_vertex2D.py` for runnable
+examples, and :doc:`colormaps` for how 2D colormaps themselves work.
 
 Dataset
 -------
@@ -131,10 +139,7 @@ The saved out HDF5 format has the following structure::
 
     /subjects/
         s1/
-            rois/
-                name[n]
-                name[n]
-                name[n]
+            rois[1]          # single vlen string: the subject's whole overlays.svg, as XML
             transforms/
                 xfm1/
                     xfm[4,4]
@@ -159,6 +164,5 @@ The saved out HDF5 format has the following structure::
             -> subject
             -> maskname
     /views
-        name1[dataref, desc, cmap, vmin, vmax, state]
-        name2[dataref, desc, cmap, vmin, vmax, state]
-
+        name1[dataref, desc, cmap, vmin, vmax, state, attrs, xfmname]
+        name2[dataref, desc, cmap, vmin, vmax, state, attrs, xfmname]
