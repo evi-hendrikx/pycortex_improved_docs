@@ -55,6 +55,15 @@ citation on the :doc:`index` page).
 The core mental model
 ----------------------
 
+Pycortex treats functional data as a plain array with no built-in
+anatomical meaning. A :term:`transform <xfm / transform>` records how one
+particular scan's voxel grid lines up with a subject's own cortical
+surface, and a :term:`mask` (see :ref:`database-masks`) narrows that
+array down to the voxels near the cortex without ever modifying the data
+itself. That's why Phase 1 below is about getting surfaces and a
+transform into the :term:`filestore` — pycortex needs that mapping in
+place before it can put your numbers on the right piece of cortex.
+
 
 **Phase 1: one-time setup, per subject**
 
@@ -94,6 +103,7 @@ so this path needs one conversion step before the usual flow applies:
 * **Surfaces**: AFNI itself doesn't typically produce cortical surface reconstructions. Most AFNI users get surfaces via SUMA/FreeSurfer underneath.  If you have a FreeSurfer subject directory from that step, import it the normal way with ``cortex.freesurfer.import_subj``.
 
 .. # TODO what if SUMA
+
 * **Volume data**: BRIK/HEAD can be read directly with nibabel, so no custom parser is needed. Just make sure the resulting array + affine are passed into pycortex's Volume object as you would  any NIfTI-derived data.
 
 * **Transform**: if you already have an alignment matrix from 3dAllineate or @auto_tlrc, convert it into a plain 4x4 array and load it the same way as any other transform (see Transform formats). Otherwise, run cortex.align.automatic against your EPI reference image as usual.
@@ -104,7 +114,8 @@ BrainVoyager uses its own native mesh and volume formats, so this path needs for
 
 * **Surfaces**: BrainVoyager's .srf mesh files need to be converted into a format pycortex's importer reads (FreeSurfer binary or GIFTI) before running cortex.freesurfer.import_subj. 
 
-.. code-block::
+.. code-block:: python
+
   import bvbabel
   import nibabel.freesurfer.io as fsio
 

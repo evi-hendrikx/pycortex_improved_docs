@@ -210,7 +210,7 @@ Making cuts
 
 After completing the segmentation phase, the next step is to make cuts in the brain surface to prepare it for flattening. Cuts are necessary because a closed, curved surface like the cortex cannot be laid flat without tearing it somewhere — the same reason no world map projection is perfectly accurate everywhere on a sphere. Making the cuts along real anatomical/sulcal boundaries (rather than arbitrarily) keeps the resulting distortion small and keeps the seams in visually unimportant places. This process involves creating cuts along the brain's sulci to transform the 3D surface into a 2D flatmap with minimal distortion.
 
-PyCortex provides three different methods for cutting and flattening brain surfaces:
+PyCortex itself provides three different methods for cutting and flattening brain surfaces, all reached through ``cortex.segment.cut_surface()`` (``flatten_with=``) and all requiring you to place the cuts by hand in Blender first:
 
 **1. Freesurfer (Recommended)**
 The traditional and most reliable method that uses Freesurfer's `mris_flatten` command. This method produces high-quality flatmaps with minimal distortion but takes approximately 2 hours per hemisphere.
@@ -221,7 +221,13 @@ An experimental method using the SLIM algorithm that is very fast but tends to l
 **3. Blender**
 A newer method that uses Blender's UV unwrapping capabilities for faster flattening (typically 5-15 minutes per hemisphere). While faster, it may introduce more distortion compared to Freesurfer.
 
-The complete process begins with manual cutting in Blender, where you'll make cuts to prepare the surface for flattening. Once the cuts are complete, the cut surface is automatically flattened using your chosen method. Finally, the resulting flatmap is imported into PyCortex for visualization and analysis.
+**4. autoflatten (external, skips manual cutting)**
+Not part of pycortex — a separate package by Matteo Visconti di Oleggio Castello: autoflatten_ (source_). Instead of you cutting in Blender, it maps cuts onto your subject automatically from a template via surface-based registration, then flattens with either a fast JAX-accelerated backend or FreeSurfer's ``mris_flatten``. Since it's standalone, check its own docs for how to get its output into a subject's :doc:`database` entry.
+
+.. _autoflatten: https://gallantlab.org/autoflatten/
+.. _source: https://github.com/mvdoc/autoflatten
+
+The remaining three methods all begin with manual cutting in Blender, where you'll make cuts to prepare the surface for flattening. Once the cuts are complete, the cut surface is automatically flattened using your chosen method. Finally, the resulting flatmap is imported into PyCortex for visualization and analysis.
 
 You may follow the steps below or a `Python notebook <https://colab.research.google.com/github/gallantlab/pycortex/blob/main/examples/quickstart/fmri_flattening.ipynb>`_.
 
