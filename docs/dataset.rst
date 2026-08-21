@@ -33,14 +33,16 @@ If you already have a Nifti file aligned to a transform in the database::
 
 Overview
 --------
-Pycortex's main data structures consists of the :class:`Dataset`, and the Dataview classes :class:`Volume`, :class:`Vertex`, :class:`VolumeRGB`, :class:`VertexRGB`, :class:`Volume2d`, :class:`Vertex2D`.
+Pycortex's main data structures consists of the :class:`Dataset`, and the Dataview classes :class:`Volume`, :class:`Vertex`, :class:`VolumeRGB`, :class:`VertexRGB`, :class:`Volume2D`, :class:`Vertex2D`.
 
     * :class:`Dataset` objects store a collection of :class:`Dataview` objects with associated names. It provides additional functionality to store and load the DataViews as HDF files.
 
     * :class:`Volume` is a :class:`Dataview` object that holds either a single or a time series of volumetric data (IE the data is in the original volume space).
     * :class:`Vertex` is a :class:`Dataview` object that holds either a single or a time series of vertex data (IE the data has been projected onto the surface vertices).
     * :class:`VolumeRGB` is a :class:`Dataview` object that contains 3 or 4 :class:`Volume` objects corresponding to the red, green, blue, and optionally alpha channels of a raw dataview.
+    * :class:`VertexRGB` is the :class:`Vertex` counterpart of :class:`VolumeRGB`: 3 or 4 :class:`Vertex` objects corresponding to the red, green, blue, and optionally alpha channels of a raw dataview.
     * :class:`Volume2D` is a :class:`Dataview` object that holds a pair of volumetric data, to be displayed using a 2D colormap.
+    * :class:`Vertex2D` is the :class:`Vertex` counterpart of :class:`Volume2D`: a pair of vertex dataviews, to be displayed using a 2D colormap.
 
 Dataviews
 ---------
@@ -50,7 +52,7 @@ Dataview is a parent class that is instantiated in the form of one of the follow
     * **vmin** / **vmax**: colormap minimum and maximums, same as in imshow.
     * **description**: A text description of the data view. This is shown as a subheading in the webgl view.
     * **priority**: Priority of this data view when included with others in a :class:`Dataset`.
-    * Other kwargs: Additional string-based attributes are saved here. For example, additional quickflat options can be specified here, to be automatically applied during the :method:`cortex.quickflat.make_figure` command. webgl views currently do not support any other view options.
+    * Other kwargs: Additional string-based attributes are saved here. For example, additional quickflat options can be specified here, to be automatically applied during the :func:`cortex.quickflat.make_figure` command. webgl views currently do not support any other view options.
 
 In all following examples, **kwargs** contains these options.
 
@@ -82,6 +84,13 @@ Generally, the :class:`Volume` class will automatically understand masked data, 
 
 Volume and Vertex objects can also be implicitly defined using a tuple syntax, as highlighted in the quickstart above.
 
+See :ref:`sphx_glr_auto_examples_datasets_plot_volume.py`,
+:ref:`sphx_glr_auto_examples_datasets_plot_vertex.py`, and
+:ref:`sphx_glr_auto_examples_datasets_plot_volume_to_vertex.py` (mapping
+volume data onto vertices) for runnable examples, and
+:ref:`sphx_glr_auto_examples_datasets_plot_dataset_arithmetic.py` for the
+numpy-style operations mentioned above.
+
 RGB data
 ~~~~~~~~
 If you have data which does not require colormapping, it is possible to directly plot them using an RGB dataview. The calling signature looks like this::
@@ -93,13 +102,26 @@ You can provide either numpy arrays or :class:`Volume` objects for the red, gree
 
 If you provided either numpy arrays or :class:`Volume` objects without vmin/vmax, the data will be normalized and cast to uint8 in order to display them. This means that the data will automatically be scaled between 0-255 and quantized. If your data is already normalized between 0 and 1, this will not occur.
 
+See :ref:`sphx_glr_auto_examples_datasets_plot_volumeRGB.py` and
+:ref:`sphx_glr_auto_examples_datasets_plot_vertexRGB.py` for runnable
+examples, and :ref:`sphx_glr_auto_examples_datasets_plot_data_with_alpha.py`
+for using the alpha channel to control transparency.
+
 2D dataviews
 ~~~~~~~~~~~~
-In order to specify 2D data views in webgl, this helper class lets you specify a pair of :class:`Volume` objects to be plotted using a 2D colormap. Currently, quickflat does not yet support 2D colormaps. To declare a 2D dataview::
+This helper class lets you specify a pair of :class:`Volume` (or :class:`Vertex`) objects to be jointly plotted using a 2D colormap, e.g. to show one variable as hue and a second as saturation/alpha. Both :func:`cortex.webgl.show` and :func:`cortex.quickflat.make_figure` support 2D dataviews. To declare a 2D dataview::
 
     dim1 = cortex.Volume.random(subject, xfmname)
     dim2 = cortex.Volume.random(subject, xfmname)
     twod = cortex.Volume2D(dim1, dim2, subject=None, xfmname=None, vmin2=None, vmax2=None, **kwargs)
+
+There is a :class:`Vertex2D` counterpart with the same call signature for vertex data::
+
+    vtwod = cortex.Vertex2D(vert1, vert2, subject=None, vmin2=None, vmax2=None, **kwargs)
+
+See :ref:`sphx_glr_auto_examples_datasets_plot_volume2D.py` and
+:ref:`sphx_glr_auto_examples_datasets_plot_vertex2D.py` for runnable
+examples, and :doc:`colormaps` for how 2D colormaps themselves work.
 
 Dataset
 -------
@@ -117,10 +139,7 @@ The saved out HDF5 format has the following structure::
 
     /subjects/
         s1/
-            rois/
-                name[n]
-                name[n]
-                name[n]
+            rois[1]          # single vlen string: the subject's whole overlays.svg, as XML
             transforms/
                 xfm1/
                     xfm[4,4]
@@ -145,6 +164,5 @@ The saved out HDF5 format has the following structure::
             -> subject
             -> maskname
     /views
-        name1[dataref, desc, cmap, vmin, vmax, state]
-        name2[dataref, desc, cmap, vmin, vmax, state]
-
+        name1[dataref, desc, cmap, vmin, vmax, state, attrs, xfmname]
+        name2[dataref, desc, cmap, vmin, vmax, state, attrs, xfmname]

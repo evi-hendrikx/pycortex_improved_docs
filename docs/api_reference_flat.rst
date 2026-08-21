@@ -26,17 +26,44 @@ quickflat
 .. autosummary::
     :toctree:generated/
 
-    add_curvature
+    make_figure
+    make_png
+    make_svg
+    make_gif
+    make_movie
+
+
+quickflat.composite
+--------------------
+
+Individual flatmap layers (ROIs, sulci, curvature, hatching/dropout,
+colorbar, custom overlays, cutouts). ``make_figure`` composites these
+for you, but each is also callable directly for finer control.
+
+.. automodule:: cortex.quickflat.composite
+
+.. autosummary::
+    :toctree:generated/
+
     add_data
     add_rois
     add_sulci
+    add_curvature
     add_hatch
     add_colorbar
     add_custom
     add_cutout
-    make_figure
-    make_png
-    make_svg
+
+
+quickflat.utils
+-----------------
+
+.. automodule:: cortex.quickflat.utils
+
+.. autosummary::
+    :toctree:generated/
+
+    make_flatmap_image
     get_flatmask
     get_flatcache
 
@@ -223,7 +250,6 @@ utils
     get_ctmpack
     get_dropout
     get_hemi_masks
-    get_roi_mask
     get_roi_masks
     get_roi_verts
     get_vox_dist

@@ -2,8 +2,38 @@
 Surface Segmentation and Flattening
 ===================================
 
+Pycortex needs a triangular mesh of each subject's cortical surface before
+it can put any functional data on a flatmap or in the WebGL viewer — see
+:doc:`overview` for how this surface fits into the rest of the pipeline.
+That mesh has to come from somewhere: it's derived from a segmentation of
+the subject's own anatomical MRI, identifying the boundary between white
+matter and gray matter, and between gray matter and dura/CSF.
 
-Welcome! This is a guide for the full process of making flatmaps, which allow us to visualize brain data in a more intuitive way than voxelized 3D images of brain data. There are three main phases of the process:
+This is done per-subject, not with a generic template (e.g. ``fsaverage``),
+because individual cortical folding patterns vary substantially between
+people; averaging surfaces across subjects would blur exactly the
+fine-grained spatial detail pixel-wise sampling (:doc:`overview`) is
+designed to preserve. The undistorted mesh reconstructed at this boundary
+is called the :term:`fiducial surface`, and every other surface pycortex
+uses (:term:`inflated <inflated surface>`, :term:`flat <flat surface /
+flatmap>`) is a deformation of it that must keep the same vertex count and
+correspondence, since that's what lets data plotted on one surface line up
+with the same data on another.
+
+Pycortex does not implement its own segmentation — that's a hard, mature
+problem already solved by dedicated tools. It wraps FreeSurfer_, which
+performs the segmentation and produces per-vertex-corresponding pial/white
+matter surfaces automatically (imperfectly — manual correction is usually
+still needed, covered below). Caret_ is another option some labs use for
+the same step, though pycortex's tooling here is built around FreeSurfer.
+What pycortex *does* own is everything downstream of that: cutting the
+surface, flattening it, and importing the result into the
+:doc:`database`.
+
+.. _FreeSurfer: http://surfer.nmr.mgh.harvard.edu/
+.. _Caret: http://brainvis.wustl.edu/wiki/index.php/Caret:Download
+
+This is a guide for the full process of making flatmaps, which allow us to visualize brain data in a more intuitive way than voxelized 3D images of brain data. There are three main phases of the process:
 
 **1. Segmentation**
 
@@ -104,77 +134,32 @@ good to manually delete them yourself. If autorecon1 ran successfully, you can p
 manual editing even if some anatomy was left behind since the next step, autorecon2, is quite
 accurate at determining brain surfaces even if non-brain anatomy was left behind. However, it's good to double check that everything worked out.
 
-To pull up the newly stripped brains and make manual edits, type in your terminal:
-    ``ipython``
+To pull up the current segmentation and surfaces for manual review and
+editing, use ``cortex.segment.edit_segmentation`` (the older
+``cortex.segment.fix_wm``/``fix_pia`` — a Mayavi + tkmedit combination —
+are deprecated in current pycortex in favor of this)::
 
-    ``import cortex``
+    import cortex
+    cortex.segment.edit_segmentation('Subject')
 
-    ``cortex.segment.fix_wm('Subject')``
+This opens FreeSurfer's **FreeView** with the subject's ``aseg.mgz``,
+``brainmask.mgz``, and ``wm.mgz`` volumes loaded alongside the
+white-matter (``smoothwm``, outlined in yellow) and pial (outlined in
+blue) surface contours, so you can see the current segmentation and both
+surfaces together and edit whichever volume needs correcting. At this
+stage you're mainly looking for leftover skull or eye tissue and deleting
+it. See FreeView's own documentation for its voxel-editing tools — they
+differ from the older tkmedit interface these docs used to describe, and
+we don't want to describe FreeView mechanics here without having verified
+them directly.
 
-This should cause three windows to pop up: a mayavi viewer with the 3D brain, one of the brain in 2D, and one of a tool bar. At this point, you want to edit individual voxels. This mostly consists of getting rid of remaining skull and eyes. To do this, click the edit voxels tool on the toolbox bar or press A on your keyboard as a shortcut. After this, to delete voxels, simply right click the areas you wish to delete. If you erase something by accident and want to undo it, press CTRL + Z (this only works for the last thing you erased so be careful).
+When you're done and have saved your edits in FreeView, tell FreeSurfer to
+regenerate the surfaces from your edited mask — ``edit_segmentation``
+prints the exact command to use once you close FreeView, which will be
+one of::
 
-In Mayavi:
-
-- Left-click and drag to rotate.
-- Middle-click and drag to pan.
-- Right-click and drag to zoom.
-
-Closing the mayavi window to automatically open the other hemisphere; close that to return to the first one. Left-click a point on the brain to save its location (a mark will be placed on the brain). This location can then be loaded in tkmedit. Look for red spikes and blue pockmarks on the brain - these usually indicate an incorrectly marked area on the white matter mask.
-    
-
-In tkmedit: 
-
-*insert images here*
-
-- Navigate - pan the image
-- Edit Voxels Tool - your main tool when using tkmedit. 
-- Left click to center the volume index at a given point. This is used to find the value of a voxel and to keep track of it when you change views.
-- Center click to set a voxel value to 255 (default) or to clone to that voxel from the aux volume.
-- Right click to clear a voxel.
-
-- Main surface - the yellow curve used to generate the 3D model of the white matter surface.
-- Original surface - the green curve, an unsmoothed version of the Main surface.
-- Pial surface - the red curve marking the outer borders of the brain, the grey matter surface.
-- Show Main Volume - the mask you are working on.
-- Show Aux Volume - The full brain volume. 
-- Coronal, Horizontal and Sagittal view - change the perspective you are viewing from. 
-
-Reset view settings for zoom and offset.
-Save or load a selected point for use with another program, such as the 3D models in mayavi. (Click this one to get to the point that you selected in the mayavi viewer.)
-
-Again:
-You can undo with ctrl+z, but it only remembers the last action done.
-If you erase something by accident, or want to restore something:
-
-Tools > Configure volume brush
-    Set Mode to Clone
-    Set Clone Source to Aux Volume
-
-This lets you paint from the aux volume to the mask. 
-Set Mode back to New Value if you're done.
-
-To change brush size:
-Tools > Configure brush info > Change Radius
-
-To change the size of the "paintbrush", in the tool bar, go to: tools > configure brush info and
-change the radius. A shortcut to do the same thing is to press the numbers on the keypad of
-your keyboard (where 1 is 1x1, 4 is 4x4, etc).
-Generally you should just work with a 1-pixel radius, though.
-To save, just go to file > save in the tool bar.
-
-|
-    
-When you are done:
-
-File > Save Main Volume
-File > Quit (the program may stumble a bit if you just close the window)
-iPython will give you three options. 
-1) Run autorecon-wm?
-2) Run autorecon-pia?
-3) Do nothing?
-If you are finished with the mask, enter 1. Otherwise enter 3.
-
-|
+    cortex.segment.run_freesurfer_recon('Subject', 'wm')   # after editing wm.mgz
+    cortex.segment.run_freesurfer_recon('Subject', 'pia')  # after editing brainmask.mgz
 
 
 
@@ -200,34 +185,30 @@ mistakes. This is the most time-consuming part of the brain segmentation.
 
 First fix big mistakes in the white matter surface. These include large swaths of gray matter
 being identified as white matter when it shouldn't, and when big portions of white matter are
-not labeled as white matter when they should be. The command to make these edits is the same as above:
-    
-    ``ipython``
-    
-    ``import cortex``
-    
-    ``cortex.segment.fix_wm("subject")``
+not labeled as white matter when they should be. The command to make these edits is the same as above::
 
-We'll look through the results of autorecon2, examining the white matter curve and masks, and then the pial (gray matter) curve. This can be a lengthy process; because it's an entirely nonverbal task, I recommend listening to podcasts as you go.    
+    import cortex
+    cortex.segment.edit_segmentation('Subject')
 
-|
+then, once you're satisfied with your edits to ``wm.mgz`` in FreeView::
 
-The yellow outline represents the smoothed white matter surfaces while the green outline is
-the surface that most closely resembles the individual voxel edits you've made. The yellow
-surface is the one that will be used for flat maps, however it is easier to use the green surface when making edits since it actually reflects the changes you made rather than the smoothed changes.
-You want to make sure to delete voxels that the green and yellow surfaces encompass that
-it shouldn't (such as gray matter and/or leftover pieces of eye or skull) as well as add voxels
-(middle click) to regions that appear to have white matter but aren't included in the
-green/yellow surfaces. Make sure to hit "A" to switch to edit mode.
+    cortex.segment.run_freesurfer_recon('Subject', 'wm')
 
+We'll look through the results of autorecon2, examining the white matter and pial surfaces as
+loaded by FreeView. This can be a lengthy process; because it's an entirely nonverbal task, I recommend listening to podcasts as you go.
 
-Autorecon on the white matter surface should take about 2 hours. These manual edits are an iterative process; when it's done, go back and look over the 3D surface, and make any changes that seem necessary. New spikes can appear in unexpected places, so three or four iterations may be needed, probably more if you are just starting to learn how to do it.
+You want to make sure to delete voxels from ``wm.mgz`` that the white-matter outline
+encompasses that it shouldn't (such as gray matter and/or leftover pieces of eye or skull),
+as well as add voxels to regions that appear to have white matter but aren't included in the
+outline.
+
+Autorecon on the white matter surface (``run_freesurfer_recon(subject, 'wm')``) should take about 2-4 hours. These manual edits are an iterative process; when it's done, go back and look over the 3D surface, and make any changes that seem necessary. New spikes can appear in unexpected places, so three or four iterations may be needed, probably more if you are just starting to learn how to do it.
 
 
 Making cuts
 ##################################
 
-After completing the segmentation phase, the next step is to make cuts in the brain surface to prepare it for flattening. This process involves creating cuts along the brain's sulci to transform the 3D surface into a 2D flatmap with minimal distortion.
+After completing the segmentation phase, the next step is to make cuts in the brain surface to prepare it for flattening. Cuts are necessary because a closed, curved surface like the cortex cannot be laid flat without tearing it somewhere — the same reason no world map projection is perfectly accurate everywhere on a sphere. Making the cuts along real anatomical/sulcal boundaries (rather than arbitrarily) keeps the resulting distortion small and keeps the seams in visually unimportant places. This process involves creating cuts along the brain's sulci to transform the 3D surface into a 2D flatmap with minimal distortion.
 
 PyCortex provides three different methods for cutting and flattening brain surfaces:
 
@@ -242,7 +223,7 @@ A newer method that uses Blender's UV unwrapping capabilities for faster flatten
 
 The complete process begins with manual cutting in Blender, where you'll make cuts to prepare the surface for flattening. Once the cuts are complete, the cut surface is automatically flattened using your chosen method. Finally, the resulting flatmap is imported into PyCortex for visualization and analysis.
 
-You may follow the steps below or a `Python notebook <https://colab.research.google.com/github/dmitry-mli/pycortex/blob/blender-flattening-support/examples/quickstart/fmri_flattening.ipynb>`_.
+You may follow the steps below or a `Python notebook <https://colab.research.google.com/github/gallantlab/pycortex/blob/main/examples/quickstart/fmri_flattening.ipynb>`_.
 
 Step 1: Manual Cutting in Blender
 ***************************************************

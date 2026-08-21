@@ -7,6 +7,8 @@ Pycortex Documentation
 
 Pycortex is a software package for generating beautiful interactive 3D visualizations of fMRI data projected onto cortical surface models. It can also generate high quality 2D flattened cortical visualizations.
 
+New to pycortex? Start with the :doc:`overview` page for the mental model and a "which page do I need" guide, and the :doc:`glossary` for terms used throughout these docs.
+
 This documentation is still under development. Please report errors or bugs at https://github.com/gallantlab/pycortex/issues.
 
 For a list of recent changes, please see the `releases on GitHub <https://github.com/gallantlab/pycortex/releases/>`_.
@@ -16,15 +18,17 @@ User Guide
 ----------
 .. toctree::
    :maxdepth: 2
-   
+
+   overview
+   glossary
    install
    segmentation_guide
    database
    align
-   .. dataset
    rois
    roidraw
    transforms
+   dataset
    colormaps
 
 Example Gallery

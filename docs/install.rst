@@ -43,6 +43,8 @@ To run the pycortex demo, using IPython, run::
 
 If everything went well, this should pop up a web browser window with a demo subject.
 
+For an explanation of what ``Volume``, ``webshow``, and the ``"fullhead"`` transform name mean, and where to go next, see :doc:`overview`.
+
 .. _IPython: http://www.ipython.org/
 
 Basic Configuration
@@ -63,3 +65,41 @@ If you want to move the filestore, you need to update the config file::
 
    [basic]
    filestore=/abs/path/to/filestore
+
+Troubleshooting
+----------------
+
+pycortex itself is pure Python, but several features shell out to
+external neuroimaging tools it doesn't bundle — FreeSurfer, FSL, Blender,
+Inkscape. Most install problems people actually hit are one of these:
+
+* ``KeyError: 'SUBJECTS_DIR'`` (or a FreeSurfer command failing oddly) —
+  FreeSurfer-backed functions like :doc:`segmentation_guide`'s
+  ``cortex.segment.edit_segmentation`` and :doc:`align`'s
+  ``cortex.align.manual``/``automatic`` read the ``$SUBJECTS_DIR``
+  environment variable directly (the same variable FreeSurfer itself
+  uses); if it isn't exported in the shell you launched Python from,
+  these fail. Set it the same way you would for any FreeSurfer command
+  (``export SUBJECTS_DIR=/path/to/freesurfer/subjects``) before starting
+  Python/IPython.
+* ``bbregister``/``mri_coreg``/``freeview``/``lta_convert``/``flirt`` not
+  found — these are FreeSurfer and FSL commands, not pycortex code; make
+  sure both are installed and on your ``PATH`` (``which bbregister``,
+  ``which flirt``) in the same shell you launch Python from.
+* FSL commands found, but automatic alignment (``cortex.align.automatic_fsl``
+  / ``autotweak``) still fails — if FSL was installed via NeuroDebian,
+  its binaries may be named e.g. ``fsl5.0-flirt`` instead of ``flirt``.
+  Set ``fsl_prefix`` in your ``options.cfg``'s ``[basic]`` section (e.g.
+  ``fsl_prefix = fsl5.0-``) to match.
+* Inkscape/Blender/SLIM/meshlab "not found" even though they're
+  installed — pycortex looks for these under the plain command names
+  (``inkscape``, ``blender``) by default, configurable in
+  ``options.cfg``'s ``[dependency_paths]`` section. On macOS in
+  particular, these are usually not on ``PATH`` by default and need the
+  full path to the app's binary, e.g.
+  ``blender = /Applications/Blender/blender.app/Contents/MacOS/blender``.
+* Data/subject not showing up in ``cortex.db`` — usually means it's in a
+  different filestore than the one pycortex is currently pointed at;
+  double check the location printed by
+  ``cortex.database.default_filestore`` above against where you expect
+  your data to be.
