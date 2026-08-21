@@ -20,8 +20,7 @@ subject = 'S1'
 xfm = 'fullhead'
 
 # First create example voxel data for this subject and transform
-voxel_data = np.random.randn(31, 100, 100)
-voxel_vol = cortex.Volume(voxel_data, subject, xfm)
+voxel_vol = cortex.Volume.random(subject, xfm)
 
 # Then we have to get a mapper from voxels to vertices for this transform
 mapper = cortex.get_mapper(subject, xfm, 'line_nearest', recache=True)

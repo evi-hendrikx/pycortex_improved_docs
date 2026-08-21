@@ -26,22 +26,19 @@ import matplotlib.pyplot as plt
 subject = 'S1'
 xfm = 'fullhead'
 
-# Creating a random dataset that is the shape for this transform with one
-# entry for each voxel
-test_data = np.random.randn(31, 100, 100)
-
-# This creates a Volume object for our test dataset for the given subject
-# and transform
-vol_data = cortex.Volume(test_data, subject, xfm)
+# This creates a random-valued Volume object for the given subject and
+# transform, with one entry for each voxel
+vol_data = cortex.Volume.random(subject, xfm)
 cortex.quickshow(vol_data)
 plt.show()
 
 # Can also alter the minimum and maximum values shown on the colorbar
-vol_data_thresh = cortex.Volume(test_data, subject, xfm, vmin=-1, vmax=1)
+vol_data_thresh = cortex.Volume(vol_data.data, subject, xfm, vmin=-1, vmax=1)
 cortex.quickshow(vol_data_thresh)
 plt.show()
 
 # If you have NaN values, those voxels show up transparent on the brain
+test_data = vol_data.data.copy()
 test_data[10:15, :, :] = np.nan
 vol_data_nan = cortex.Volume(test_data, subject, xfm)
 cortex.quickshow(vol_data_nan)
