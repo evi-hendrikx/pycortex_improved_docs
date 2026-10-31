@@ -1,0 +1,15 @@
+/* Style the sidebar toctree captions like Alabaster's sidebar <h3> headings. */
+div.sphinxsidebar p.caption {
+    font-family: Georgia, serif;
+    color: #444;
+    font-size: 24px;
+    font-weight: normal;
+    margin: 20px 0 5px 0;
+    padding: 0;
+}
+
+@media screen and (max-width: 940px) {
+    div.sphinxsidebar p.caption {
+        color: #fff;
+    }
+}

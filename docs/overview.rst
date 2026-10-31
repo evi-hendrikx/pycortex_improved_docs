@@ -3,8 +3,9 @@ Overview: what pycortex is for
 
 This page is the "start here." It explains the problem pycortex solves,
 gives you a mental model of its main pieces and how data flows between
-them, points you to the right page for whatever you're trying to do, and
-ends with pointers to a working demo and the example gallery.
+them, and ends with pointers to a working demo and the example gallery.
+To find the right page for whatever you're trying to do, see
+:ref:`which-page`.
 
 If a term below is unfamiliar, check the :doc:`glossary`.
 
@@ -193,36 +194,3 @@ Some favorites from the gallery, each real and runnable:
 
 :doc:`auto_examples/index` has plenty more — most examples are short and
 meant to be copied and adapted directly rather than read end to end.
-
-
-Which page do I need?
------------------------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 45 55
-
-   * - I want to...
-     - Go to...
-   * - Understand pycortex's vocabulary before reading further
-     - :doc:`glossary`
-   * - Turn a FreeSurfer subject into pycortex surfaces (segmentation,
-       cutting, flattening)
-     - :doc:`segmentation_guide`
-   * - Understand what's stored in the filestore / browse an existing
-       subject's data
-     - :doc:`database`
-   * - Register a functional scan to a subject's anatomy
-     - :doc:`align` and :doc:`transforms`
-   * - Define and use regions of interest
-     - :doc:`rois` (SVG/Inkscape workflow) and :doc:`roidraw` (in-browser
-       drawing add-on)
-   * - Render a static 2D image of data on a flatmap
-     - :doc:`api_reference_flat` (``cortex.quickflat``) and the
-       :doc:`auto_examples/index`
-   * - Get an interactive 3D/flat viewer
-     - :doc:`userguide/webgl`
-   * - Pick colors for 1D or 2D data
-     - :doc:`colormaps`
-   * - See real, runnable end-to-end code
-     - :doc:`auto_examples/index`

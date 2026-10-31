@@ -25,7 +25,7 @@ care about, and a hand-drawn boundary respects anatomical continuity in a
 way an automatic threshold can't. Because the SVG lives on the subject
 (not on a particular functional dataset or transform), one ROI drawing
 applies to any dataset for that subject — see :ref:`Overlays
-<database-masks>` in :doc:`database` for how these ROI SVGs sit alongside
+<database-overlays>` in :doc:`database` for how these ROI SVGs sit alongside
 the rest of a subject's stored data. From the drawn outline, pycortex can
 derive both a volumetric mask (for restricting analyses to voxels inside
 an ROI) and a set of surface vertex indices (for surface-based analyses),
