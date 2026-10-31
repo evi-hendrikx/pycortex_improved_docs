@@ -107,6 +107,8 @@ Which page do I need?
    api_reference_flat
    indices
 
+.. _citation:
+
 Citation
 --------
 If you use pycortex in published work, please cite the `pycortex paper <http://dx.doi.org/10.3389/fninf.2015.00023>`_:

@@ -205,6 +205,121 @@ outline.
 Autorecon on the white matter surface (``run_freesurfer_recon(subject, 'wm')``) should take about 2-4 hours. These manual edits are an iterative process; when it's done, go back and look over the 3D surface, and make any changes that seem necessary. New spikes can appear in unexpected places, so three or four iterations may be needed, probably more if you are just starting to learn how to do it.
 
 
+.. _database-freesurfer-import:
+
+Importing a subject from Freesurfer
+###################################
+
+The usual way to create a subject in the pycortex database is to import one that has
+already been segmented with Freesurfer_::
+
+    import cortex
+    cortex.freesurfer.import_subj(freesurfer_subject, pycortex_subject=None,
+                                  freesurfer_subject_dir=None,
+                                  whitematter_surf='smoothwm',
+                                  autoflatten=True)
+
+This reads from the Freesurfer subject directory,
+``$SUBJECTS_DIR/{freesurfer_subject}/``, and writes into the pycortex filestore entry
+for the subject, ``{filestore}/{pycortex_subject}/``. Only the files listed below are
+copied over. Note that ``import_subj`` overwrites any pre-existing pycortex subject
+of the same name, including all blender cuts, masks and transforms, and deletes all
+cached files for that subject.
+
+Anatomical volumes are converted with ``mri_convert``:
+
+======================  =============================  ==========================
+Freesurfer file         pycortex file                  Contents
+======================  =============================  ==========================
+``mri/T1.mgz``          ``anatomicals/raw.nii.gz``     T1-weighted anatomical
+``mri/aseg.mgz``        ``anatomicals/aseg.nii.gz``    Automatic segmentation
+``mri/wm.mgz``          ``anatomicals/raw_wm.nii.gz``  White matter segmentation
+======================  =============================  ==========================
+
+Surfaces are imported for both hemispheres (``lh`` and ``rh``) and are converted with
+``mris_convert --to-scanner``, so that they are stored in the same coordinate system
+as the anatomical volumes rather than in the Freesurfer TKR coordinate system (whose
+center is set to FOV/2). As a consequence, the imported surfaces will look misaligned
+with the anatomical volumes if you load them in ``freeview``, which expects TKR
+coordinates. This is expected: the surfaces in the pycortex database are only meant to
+be used by pycortex.
+
+==========================  =============================  ======================
+Freesurfer file             pycortex file                  Contents
+==========================  =============================  ======================
+``surf/?h.smoothwm``        ``surfaces/wm_?h.gii``         White matter surface
+``surf/?h.pial``            ``surfaces/pia_?h.gii``        Pial surface
+``surf/?h.inflated``        ``surfaces/inflated_?h.gii``   Inflated surface
+==========================  =============================  ======================
+
+The surface imported as ``wm`` is whichever surface is named by the
+``whitematter_surf`` argument, so the first row above is really
+``surf/?h.{whitematter_surf}``. It defaults to ``smoothwm``, but that surface is
+smoothed and may not be appropriate for every use; ``white`` is a good alternative.
+
+Surface info files hold one value per vertex. Both hemispheres are stored together in
+a single ``.npz`` file, under the keys ``left`` and ``right``. Note that the values are
+stored **negated** with respect to the Freesurfer values.
+
+==========================  ================================  ==================
+Freesurfer files            pycortex file                     Contents
+==========================  ================================  ==================
+``surf/?h.sulc``            ``surface-info/sulcaldepth.npz``  Sulcal depth
+``surf/?h.thickness``       ``surface-info/thickness.npz``    Cortical thickness
+``surf/?h.curv``            ``surface-info/curvature.npz``    Curvature
+==========================  ================================  ==================
+
+``import_subj`` also (re-)generates the fiducial surfaces, halfway between the white
+matter and the pial surfaces, which are used for cutting and flattening. Those are
+written back into the *Freesurfer* subject directory as ``surf/?h.fiducial``, not into
+the pycortex filestore.
+
+Labels and annotations are not imported; see ``cortex.freesurfer.get_label``.
+
+
+.. _database-autoflatten:
+
+Flattening the surfaces
+#######################
+
+Pycortex needs flat surfaces to make flatmaps, and creating them requires cutting the
+cortical surface open. By default, ``import_subj`` does this for you at the end of the
+import by calling autoflatten_, which projects a template set of cuts onto the
+subject's surfaces, flattens the resulting patches, and imports the flatmaps into the
+pycortex database. autoflatten_ is an optional dependency, installed with the
+``autoflatten`` extra::
+
+    pip install "pycortex[autoflatten]"
+
+If autoflatten_ is not installed, ``import_subj`` warns and skips this step. Note that
+flattening takes a while, typically 15-30 minutes for both hemispheres, so you may
+want to skip it and flatten the surfaces later (or by hand)::
+
+    cortex.freesurfer.import_subj(freesurfer_subject, autoflatten=False)
+
+You can then run the same step on its own at any time::
+
+    cortex.freesurfer.autoflatten_subject(freesurfer_subject, pycortex_subject=None,
+                                          freesurfer_subject_dir=None)
+
+Extra command line arguments for autoflatten_ can be passed through the
+``autoflatten_args`` argument of either function, for instance
+``autoflatten_args=['--backend', 'freesurfer']`` to flatten with Freesurfer's
+``mris_flatten`` instead of the default JAX-accelerated backend, or
+``autoflatten_args=['--overwrite']`` to redo patches that already exist.
+
+If you would rather cut the surfaces by hand, see :doc:`segmentation_guide`, and
+then import the flatmaps with::
+
+    cortex.freesurfer.import_flat(fs_subject, patch, hemis=['lh', 'rh'],
+                                  cx_subject=None)
+
+which writes ``surfaces/flat_lh.gii`` and ``surfaces/flat_rh.gii``. Both
+``autoflatten_subject`` and ``import_flat`` delete the subject's ``overlays.svg``
+file and all of its cached files, since the flatmaps fundamentally change.
+
+
+
 Making cuts
 ##################################
 

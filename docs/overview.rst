@@ -5,15 +5,13 @@ This page is the "start here." It explains the problem pycortex solves,
 gives you a mental model of its main pieces and how data flows between
 them, and ends with pointers to a working demo and the example gallery.
 To find the right page for whatever you're trying to do, see
-:ref:`which-page`.
-
-If a term below is unfamiliar, check the :doc:`glossary`.
+:ref:`which-page`. If a term below is unfamiliar, check the :doc:`glossary`.
 
 The end goal: an interactive viewer, that can switch from folded, to inflated and flat surfaces
 and that can display your data, ROIs and other anatomical data. Two
-independent values per vertex can be shown separately with an ordinary 1D
+independent values per vertex can be shown separately with a 1D
 colormap, or combined into one flatmap with a 2D colormap (see
-:doc:`colormaps`) — cycling through all three below:
+:doc:`colormaps`) (example below).
 
 .. # TODO: update example with Mark's fake data version
 
@@ -36,21 +34,13 @@ Pycortex instead uses **pixel-wise sampling** for a visibly crisper, more
 faithful image.
 
 Pycortex lets you move interactively between the folded,
-inflated, and flattened views of the same surface, rather than being
-stuck with one. Being able
+inflated, and flattened views of the same surface. Being able
 to morph between them live allows you to reap benefits of all views.
 You can build intuition for *where on the folded brain* a
 feature on the flatmap actually lives while also seeing the whole cortex at once.
 
 This reasoning is laid out in more technical depth in
-the paper this software is built around:
-
-    Gao JS, Huth AG, Lescroart MD and Gallant JL (2015). Pycortex: an
-    interactive surface visualizer for fMRI. *Front. Neuroinform.* 9:23.
-    doi: `10.3389/fninf.2015.00023 <https://doi.org/10.3389/fninf.2015.00023>`_
-
-If you use pycortex in published work, please cite this paper (see the
-citation on the :doc:`index` page).
+the :ref:`pycortex paper <citation>`.
 
 
 The core mental model
@@ -107,7 +97,7 @@ so this path needs one conversion step before the usual flow applies:
 
 * **Volume data**: BRIK/HEAD can be read directly with nibabel, so no custom parser is needed. Just make sure the resulting array + affine are passed into pycortex's Volume object as you would  any NIfTI-derived data.
 
-* **Transform**: if you already have an alignment matrix from 3dAllineate or @auto_tlrc, convert it into a plain 4x4 array and load it the same way as any other transform (see Transform formats). Otherwise, run cortex.align.automatic against your EPI reference image as usual.
+* **Transform**: if you already have an alignment matrix from 3dAllineate or @auto_tlrc, convert it into a plain 4x4 array and load it the same way as any other transform (see :ref:`adding-transforms`). Otherwise, run cortex.align.automatic against your EPI reference image as usual.
 
 *I have BrainVoyager data*
 
