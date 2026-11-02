@@ -8,7 +8,7 @@ If you are coming from standard fMRI analysis, ``cortex.Volume`` can feel
 like a black box: you hand it a *1D* array of numbers and a subject/transform
 name, and a cortical surface pops out. This example opens that box up by
 walking through the two pieces that make it possible -- the **transform**
-(:doc:`/transforms`) and the **mask** (:ref:`database-masks`) -- using the
+(:doc:`/transforms`) and the **mask** (:doc:`/masks`) -- using the
 same functional volume the transform itself was aligned to as a reference,
 so you can see exactly which voxels end up feeding the surface.
 

@@ -22,7 +22,7 @@ different questions:
   voxel *indices* of the reference EPI file, so pycortex can look up "which
   voxel does this surface point fall into" without going through a
   physical-coordinate round trip for every lookup. This is the
-  representation used for :ref:`mask <database-masks>` generation and
+  representation used for :doc:`mask <masks>` generation and
   other operations that need fast index lookups.
 
 Both are stored together in the transform's ``matrices.xfm`` precisely so that neither
@@ -44,7 +44,7 @@ Each transform lives in its own directory in the :doc:`filestore <database>`,
   was computed against. Any image nibabel can read is accepted and converted
   to NIfTI; for a 4D image only the first volume is kept. Storing it allows
   visual validation and tweaking of the alignment using :doc:`align`.
-* ``mask_{type}.nii.gz``: :ref:`masks <database-masks>` cached for this
+* ``mask_{type}.nii.gz``: :doc:`masks <masks>` cached for this
   transform. ``save_xfm`` refuses to change a transform that already has
   masks, since they were computed from the old alignment.
 
@@ -85,39 +85,3 @@ transform::
     xfm = cortex.xfm.Transform.from_fsl('func2anat.mat', 'func.nii.gz', 'anat.nii.gz')
     xfm.save(subject, xfmname, 'coord')
 
-
-.. _database-masks:
-
-Masks
-~~~~~
-One of the fundamental reasons for carefully aligning surfaces is to allow the creation and use of cortical masks. This limits the number of voxels you need to model. Traditionally, these masks are created by selecting the set of nearest neighbor voxels for each vertex on the transformed surface. Unfortunately, pycortex's advanced per-pixel mapping precludes the use of this simple mask, since faces could potentially intersect with voxel corners which are not in this simple mask. Thus, the default masks in pycortex use a distance metric to compute mask membership.
-
-Masks were added into pycortex in May 2013, due to previous issues with masked data and the addition of the per-pixel mapping. Masked datasets are further discussed in the datasets page.
-
-Retrieving a mask
-"""""""""""""""""
-A mask is specified by three variables: **subject**, **transform**, and **mask type**. pycortex defines five named mask types, all computed by distance from the surface rather than simple nearest-neighbor voxel selection:
-
-    * ``'nearest'`` — only voxels overlapping the fiducial surface itself. The most conservative option.
-    * ``'thin'`` — voxels within 2 mm of the fiducial surface.
-    * ``'cortical'`` — voxels whose centers fall inside the cortical ribbon, between the white matter and pial surfaces (requires both surfaces to be present for the subject). This is the most anatomically precise mask, but can be too restrictive: functional data rarely aligns with the anatomy closely enough for every true cortical voxel to fall inside the ribbon.
-    * ``'line_nearest'`` — any voxel with any part intersecting the cortical ribbon. A more liberal counterpart to ``'cortical'``.
-    * ``'thick'`` — voxels within 8 mm of the fiducial surface. This is the default, because field inhomogeneity means EPI (functional) scans are distorted and never perfectly co-register with the anatomical scan — a generous margin makes it less likely that true cortical signal gets excluded by the mask. The tradeoff is that it also keeps a fair amount of white matter and skull, so switching to ``'thin'`` after the fact is a reasonable way to cut down the number of voxels you need to model once you trust the alignment.
-
-To retrieve the thick mask for S1 using the fullhead transform::
-
-    import cortex
-    mask = cortex.db.get_mask('S1', 'fullhead', 'thick')
-
-The first time you load a mask, it is generated (via :func:`cortex.utils.get_cortical_mask`, which ``get_mask`` calls internally when a cached mask isn't found) and stored inside the folder for the associated transform, so later calls just read it back.
-
-For selecting voxels that fall within functional ROIs defined in other experiments/datasets rather than by anatomical proximity, see :func:`cortex.utils.get_roi_masks`.
-
-For a worked example of what a mask actually looks like (visualized against the reference functional volume it was computed from) and how it's used to turn a 1D array of per-voxel values into a :class:`cortex.Volume` for display, see :ref:`sphx_glr_auto_examples_utils_plot_mask_and_transform.py`.
-
-Loading a mask
-""""""""""""""
-If you use a custom mask for any reason, it is highly recommended that you load it into the database for future reference. It will allow more seamless integration with ``Datasets``, and will prevent it from being lost. To add a custom mask to the database::
-
-    import cortex
-    cortex.db.load_mask(subject, xfmname, masktype, mask)

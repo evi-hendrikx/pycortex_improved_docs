@@ -131,7 +131,7 @@ surface file, ``get_surf`` returns the average of ``wm`` and ``pia``.
 
 ``get_xfm`` returns the ``coord`` representation by default; pass
 ``xfmtype='magnet'`` for the other one (see :doc:`transforms`). See
-:ref:`database-masks` for the mask types and :ref:`database-surfinfo` for
+:doc:`masks` for the mask types and :ref:`database-surfinfo` for
 the available surface info.
 
 The same data can be browsed through attributes, which supports tab
@@ -228,7 +228,7 @@ Each transform has its own subdirectory, ``transforms/{name}/``, holding
 ``matrices.xfm`` (the transform itself), ``reference.nii.gz`` (the
 functional reference volume it was computed against) and any cached
 ``mask_{type}.nii.gz`` files. See :doc:`transforms` for what a transform
-stores and how to add one, and :ref:`database-masks` for the masks.
+stores and how to add one, and :doc:`masks` for the masks.
 
 
 .. _database-surfinfo:

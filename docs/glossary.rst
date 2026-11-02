@@ -67,8 +67,7 @@ below links to the page that explains it in full.
         near the cortical surface. pycortex ships five named mask types
         (``'nearest'``, ``'thin'``, ``'cortical'``, ``'line_nearest'``,
         ``'thick'``), trading off how close a voxel must be to the surface
-        to count. See :ref:`the Masks section <database-masks>` of
-        :doc:`database`.
+        to count. See :doc:`masks`.
 
     pixel-wise sampling
         Pycortex's method of mapping functional volume data onto the

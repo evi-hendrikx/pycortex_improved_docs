@@ -68,6 +68,7 @@ Which page do I need?
    database
    align
    transforms
+   masks
 
 .. toctree::
    :maxdepth: 2

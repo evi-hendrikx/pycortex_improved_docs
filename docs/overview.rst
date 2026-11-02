@@ -47,7 +47,7 @@ The core mental model
 Pycortex treats functional data as a plain array with no built-in
 anatomical meaning. A :term:`transform <xfm / transform>` records how one
 particular scan's voxel grid lines up with a subject's own cortical
-surface, and a :term:`mask` (see :ref:`database-masks`) narrows that
+surface, and a :term:`mask` (see :doc:`masks`) narrows that
 array down to the voxels near the cortex without ever modifying the data
 itself. That's why Phase 1 below is about getting surfaces and a
 transform into the :term:`filestore` — pycortex needs that mapping in

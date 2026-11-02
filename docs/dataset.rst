@@ -73,14 +73,7 @@ The :class:`Volume` and :class:`Vertex` objects support standard numpy operation
 
     vol = cortex.Volume.empty(subject, xfmname) + 1
 
-:class:`Volume` also supports masked data. Masked data is data in which the following operation has occurred::
-
-    data = np.random.randn(32, 100, 100)
-    mask = np.random.rand(32, 100, 100) > .5
-
-This is good for limiting the number of voxels required to model. Masks are delicate; you have to have the exact mask, otherwise the linear ordering of the voxels required to reconstruct the 3D volume is lost. It is hightly recommended that you store masks in the pycortex database for this reason. See :ref:`database-masks` for more information about storing masks.
-
-Generally, the :class:`Volume` class will automatically understand masked data, assuming the mask exists in the database. If you have masked data where the mask does not exist in the database, you must provide it in the mask keyword argument.
+:class:`Volume` also accepts masked data: a 1D array (or 2D ``(t, v)`` for a time series) holding only the voxels inside a mask. If the mask isn't saved in the database, pass it with the ``mask`` keyword argument. See :ref:`masked-data`.
 
 Volume and Vertex objects can also be implicitly defined using a tuple syntax, as highlighted in the quickstart above.
 
