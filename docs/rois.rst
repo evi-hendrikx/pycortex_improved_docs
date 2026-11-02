@@ -81,7 +81,7 @@ Using ROIs
 **On the flatmap and in the viewer.** :doc:`Static flatmaps <quickflat>`
 show ROI outlines and labels by default (``with_rois``, ``with_labels``;
 ``roi_list`` picks a subset), and so does the :doc:`WebGL viewer
-<userguide/webgl>` (``overlays_visible``, ``labels_visible``).
+<webgl>` (``overlays_visible``, ``labels_visible``).
 
 **As vertices.** :func:`cortex.get_roi_verts` returns the vertex indices
 inside each ROI, numbered across both hemispheres (left first)::

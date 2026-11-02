@@ -1,7 +1,7 @@
 Bumpy flatmap
 =============
 
-The ``bumpy_flatmap`` surface control in the :doc:`/userguide/webgl` gives
+The ``bumpy_flatmap`` surface control in the :doc:`/webgl` gives
 the flatmap relief.
 
 Unfolding towards a flatmap drives illumination to fully uniform and

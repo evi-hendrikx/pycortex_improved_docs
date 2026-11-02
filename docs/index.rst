@@ -34,7 +34,7 @@ already have:
    * - A pycortex subject and functional data
      - :doc:`align`, then :doc:`dataset`
    * - Data in a ``Volume`` or ``Vertex``, ready to plot
-     - :doc:`quickflat` or :doc:`userguide/webgl`
+     - :doc:`quickflat` or :doc:`webgl`
    * - A function name to look up
      - :doc:`api_reference_flat`
    * - Used pycortex before, and want to see what's new
@@ -60,10 +60,10 @@ already have:
    segmentation_guide
    importing_other_software
    flattening
-   database
    align
    transforms
    masks
+   database
 
 .. toctree::
    :maxdepth: 2
@@ -73,7 +73,7 @@ already have:
    dataset
    mapping
    quickflat
-   userguide/webgl
+   webgl
    colormaps
 
 .. toctree::

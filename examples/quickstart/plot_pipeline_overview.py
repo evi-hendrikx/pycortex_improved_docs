@@ -63,7 +63,7 @@ plt.show()
 # -----------------------------------------------
 # ``cortex.webshow`` (an alias for ``cortex.webgl.show``) opens the same
 # data in a browser-based viewer where you can drag between folded,
-# inflated, and flattened views live -- see :doc:`/userguide/webgl`. It
+# inflated, and flattened views live -- see :doc:`/webgl`. It
 # starts a local web server and blocks until you close it, so it is not
 # actually called while this gallery page is built; run the line below
 # yourself to try it:

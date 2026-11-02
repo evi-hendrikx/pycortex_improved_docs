@@ -3,7 +3,7 @@ Static flatmaps
 
 ``cortex.quickflat`` draws data on a subject's flatmap with matplotlib, for
 figures and image files. It uses the same :term:`pixel-wise sampling` as
-the :doc:`WebGL viewer <userguide/webgl>`, and needs the subject to have a
+the :doc:`WebGL viewer <webgl>`, and needs the subject to have a
 ``flat`` surface (see :doc:`flattening`).
 
 

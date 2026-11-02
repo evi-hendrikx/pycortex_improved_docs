@@ -94,7 +94,7 @@ pycortex does)**
                         folded/inflated/flattened, switch datasets and
                         colormaps live, draw ROIs/sulci in-browser (see
                         :doc:`roidraw`), save/restore viewpoints, play
-                        back time-series data — see :doc:`userguide/webgl`
+                        back time-series data — see :doc:`webgl`
 
 ``cortex.quickshow`` is an alias for ``cortex.quickflat.make_figure``,
 and ``cortex.webshow`` is an alias for ``cortex.webgl.show`` — both used

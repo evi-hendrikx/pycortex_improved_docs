@@ -3,7 +3,7 @@ Mapping volumes to the surface
 
 You don't need to map anything to *show* volume data: the
 :doc:`static flatmaps <quickflat>` and the :doc:`WebGL viewer
-<userguide/webgl>` sample the volume directly for every pixel
+<webgl>` sample the volume directly for every pixel
 (:term:`pixel-wise sampling`). Mapping is for when you want the values
 themselves on the surface, one per vertex, e.g. for surface-based analyses,
 to compare with surface data, or to move data to ``fsaverage``.
