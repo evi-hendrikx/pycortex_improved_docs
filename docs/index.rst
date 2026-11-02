@@ -40,8 +40,7 @@ Which page do I need?
      - :doc:`rois` (SVG/Inkscape workflow) and :doc:`roidraw` (in-browser
        drawing add-on)
    * - Render a static 2D image of data on a flatmap
-     - :doc:`api_reference_flat` (``cortex.quickflat``) and the
-       :doc:`auto_examples/index`
+     - :doc:`quickflat`
    * - Get an interactive 3D/flat viewer
      - :doc:`userguide/webgl`
    * - Pick colors for 1D or 2D data
@@ -82,8 +81,9 @@ Which page do I need?
    :caption: Visualizing data
 
    dataset
-   colormaps
+   quickflat
    userguide/webgl
+   colormaps
 
 .. toctree::
    :maxdepth: 2
