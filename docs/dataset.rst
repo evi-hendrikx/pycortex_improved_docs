@@ -3,13 +3,14 @@ Pycortex Data Structures
 
 .. currentmodule:: cortex.dataset
 
-Pycortex implements a set of helper functions that help normalize and standard data formats. It also wraps h5py to provide a standard way to store your data in HDF format.
+Pycortex's data classes pair a data array with the subject (and, for volumes, the transform) it belongs to, plus display settings such as the colormap. Every plotting function takes them. A :class:`Dataset` collects several of them and saves them to an HDF5 file.
 
 Quickstart
 ----------
-:class:`Dataset` objects can be defined implicitly using a tuple syntax::
+Plotting functions also accept a ``(data, subject, xfmname)`` tuple, which they turn into a :class:`Volume`::
 
     import cortex
+    import numpy as np
     cortex.webshow((np.random.randn(31, 100, 100), "S1", "fullhead"))
 
 To create a dataset manually::
@@ -31,24 +32,33 @@ If you already have a Nifti file aligned to a transform in the database::
     dv = cortex.Volume("path/to/nifti_file.nii.gz", "S1", "fullhead")
     cortex.quickshow(dv)
 
-Overview
---------
-Pycortex's main data structures consists of the :class:`Dataset`, and the Dataview classes :class:`Volume`, :class:`Vertex`, :class:`VolumeRGB`, :class:`VertexRGB`, :class:`Volume2D`, :class:`Vertex2D`.
-
-    * :class:`Dataset` objects store a collection of :class:`Dataview` objects with associated names. It provides additional functionality to store and load the DataViews as HDF files.
-
-    * :class:`Volume` is a :class:`Dataview` object that holds either a single or a time series of volumetric data (IE the data is in the original volume space).
-    * :class:`Vertex` is a :class:`Dataview` object that holds either a single or a time series of vertex data (IE the data has been projected onto the surface vertices).
-    * :class:`VolumeRGB` is a :class:`Dataview` object that contains 3 or 4 :class:`Volume` objects corresponding to the red, green, blue, and optionally alpha channels of a raw dataview.
-    * :class:`VertexRGB` is the :class:`Vertex` counterpart of :class:`VolumeRGB`: 3 or 4 :class:`Vertex` objects corresponding to the red, green, blue, and optionally alpha channels of a raw dataview.
-    * :class:`Volume2D` is a :class:`Dataview` object that holds a pair of volumetric data, to be displayed using a 2D colormap.
-    * :class:`Vertex2D` is the :class:`Vertex` counterpart of :class:`Volume2D`: a pair of vertex dataviews, to be displayed using a 2D colormap.
-
 Dataviews
 ---------
-Dataview is a parent class that is instantiated in the form of one of the following subclasses: :class:`Volume`, :class:`Vertex`, :class:`VolumeRGB`, :class:`VertexRGB`, :class:`Volume2D`, :class:`Vertex2D`. All dataviews have the following additional kwargs:
+The dataview classes come in a volume and a vertex version. Volume data is
+still in the functional scan's voxel space, so it needs a transform; vertex
+data already has one value per surface vertex.
 
-    * **cmap**: colormap name. This should be a colormap name in matplotlib. See `matplotlib colormaps <http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps>`_  for acceptable names.
+.. list-table::
+   :header-rows: 1
+   :widths: 30 35 35
+
+   * -
+     - Volume data
+     - Vertex data
+   * - One value, colormapped
+     - :class:`Volume`
+     - :class:`Vertex`
+   * - Two values, 2D colormap
+     - :class:`Volume2D`
+     - :class:`Vertex2D`
+   * - Red, green, blue (and alpha)
+     - :class:`VolumeRGB`
+     - :class:`VertexRGB`
+
+:class:`Volume` and :class:`Vertex` hold a single map or a time series.
+All dataviews take these additional kwargs:
+
+    * **cmap**: colormap name; see :doc:`colormaps`.
     * **vmin** / **vmax**: colormap minimum and maximums, same as in imshow.
     * **description**: A text description of the data view. This is shown as a subheading in the webgl view.
     * **priority**: Priority of this data view when included with others in a :class:`Dataset`.
@@ -74,8 +84,6 @@ The :class:`Volume` and :class:`Vertex` objects support standard numpy operation
     vol = cortex.Volume.empty(subject, xfmname) + 1
 
 :class:`Volume` also accepts masked data: a 1D array (or 2D ``(t, v)`` for a time series) holding only the voxels inside a mask. If the mask isn't saved in the database, pass it with the ``mask`` keyword argument. See :ref:`masked-data`.
-
-Volume and Vertex objects can also be implicitly defined using a tuple syntax, as highlighted in the quickstart above.
 
 See :ref:`sphx_glr_auto_examples_datasets_plot_volume.py`,
 :ref:`sphx_glr_auto_examples_datasets_plot_vertex.py`, and
@@ -118,7 +126,7 @@ examples, and :doc:`colormaps` for how 2D colormaps themselves work.
 
 Dataset
 -------
-Dataset objects hold a dictionary of DataView objects. Its main function is saving out data into a standardized HDF format. Datasets also allow subject data packing, if you desire to send data to someone without the subject database.
+Dataset objects hold a dictionary of named dataviews. Their main function is saving data to a standardized HDF5 file. With ``pack=True``, the subjects' surfaces, transforms, masks and overlays are copied from the :doc:`filestore <database>` into the file too, so it can be opened by someone without that subject in their database.
 
 In addition, Datasets provide data deduplication. This is especially important for the webgl views, in order to reduce the amount of data transfer between server and client. Deduplication is accomplished using a SHA1 hash of the raw numpy data. This is not a foolproof method, but given the constraints of visualizing volumetric data, additional Numpy attributes do not need to be included in the hash.
 
@@ -128,7 +136,7 @@ To save data::
     ds = cortex.Dataset(rand=(np.random.randn(31, 100, 100), "S1", "fullhead"))
     ds.save("/tmp/dataset.hdf", pack=True)
 
-The saved out HDF5 format has the following structure::
+The HDF5 file has the following structure (``/subjects`` only with ``pack=True``)::
 
     /subjects/
         s1/

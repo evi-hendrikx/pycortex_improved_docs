@@ -47,7 +47,6 @@ Here is an example entry into the filestore...
         │   ├── flatverts_1024.npz
         │   └── fullhead_linenn.npz
         ├── overlays.svg
-        ├── rois.svg
         ├── surface-info
         │   ├── bumpy_flatmap.npz
         │   ├── curvature.npz
@@ -174,15 +173,24 @@ over the subject names with ``for subject in cortex.db``.
 Anatomical scans
 ----------------
 
-Each subject must have an anatomical scan.
+``anatomicals/raw.nii.gz`` is the subject's T1-weighted anatomical scan
+(``import_subj`` copies it from FreeSurfer's ``mri/T1.mgz``). It isn't
+needed to plot data, but FSL-based alignment (``cortex.align.automatic_fsl``,
+``autotweak``), MNI transforms and some volume utilities read it. Other
+anatomical volumes (``brainmask``, ``whitematter``, …) are generated from it
+on demand by ``cortex.db.get_anat`` and saved next to it.
 
 
 Cache
 -----
 
-The cache holds the sequence of files necessary for the webgl viewer. OpenCTM_ is a geometry specification that allows very small files to reduce bandwidth. Files are stored with the format ``{subject}_{transform}_[{types}]_{compression}_{level}.{suffix}``. Each subject and transform is associated with a triplet of files called a "ctmpack". Each ctmpack contains a json file specifying the limits of the data, a ctm file consisting of concatenated left and right hemispheres, and an SVG_ consisting of the roi's with the data layers deleted. There is a unique ctmpack for each subject, transform, and set of included inflations. Raw CTMs are generated for view.webshow, whereas MG2 CTM's are generated for static WebGL views. These files are considered disposable, and are generated on demand.
-
-The flatcache holds the voxel indices for quickly generating a flatmap. They have the format ``{subject}_{transform}_{height}_{date}.pkl``. A different flatcache must be generated for each datamap height. These files are also disposable and are generated on demand. This cache allows quickflat to satisfy its namesake.
+``cache/`` holds files pycortex generates on demand and can always
+regenerate: volume-to-surface mappers, flatmap pixel maps, compressed
+surfaces for the WebGL viewer, and more. They are safe to delete. Most
+functions take ``recache=True`` to rebuild what they use, and
+``cortex.db.clear_cache(subject)`` deletes them all. The ``cache`` option
+in ``options.cfg`` moves caches out of the filestore, e.g. to fast local
+storage.
 
 
 .. _database-surfaces:
@@ -245,13 +253,11 @@ Anything computed from the flatmap -- the distortion maps, the flatmap border an
 Views
 -----
 
-It is often useful to be able to store, recall, and share specific perspectives onto a 3D model of the brain. The filestore stores these "views" as JSON files containing parameters such as altitude, radius, target, and azimuth. After opening a webgl viewer and manipulating the brain using the browser GUI, a view can be stored by calling::
+``views/`` holds saved WebGL camera views, one JSON file per name. Save the
+current view of an open viewer, and apply a saved one, with::
 
     viewer = cortex.webgl.show(volume)
     viewer.save_view(subject, name)
-
-Where, ``'subject'`` is the subject identifier and ``'name'`` is a unique name for the stored view. A previously saved view can be applied to a webgl viewer using::
-
     viewer.get_view(subject, name)
 
 See :doc:`features/camera_views_animations` for the default views, views
@@ -263,16 +269,13 @@ saved in the browser, and animations.
 ``overlays.svg``
 ----------------
 
-Overlays are stored as SVG_'s. This is where surface ROIs are defined. Since these surface ROIs are invariant to transform, only one ROI map is needed for each subject. These SVGs are automatically created for a subject if you call ``cortex.add_roi``. ROI overlays are created and edited in Inkscape_. See :doc:`rois` for why ROIs are stored this way instead of as volumetric labels, and ``cortex.svgroi`` for the implementation.
+``overlays.svg`` holds the subject's ROIs and sulci, as layers of an SVG
+drawn on the flatmap. Surface ROIs don't depend on a transform, so there is
+one file per subject. It is created the first time it's needed and edited
+in Inkscape; see :doc:`rois`. Importing a new flatmap deletes it (see
+:doc:`flattening`). Older subjects may have a ``rois.svg`` instead, which
+is converted to ``overlays.svg`` on first use.
 
 
-``rois.svg``
-------------
-
-
-.. _OpenCTM: http://openctm.sourceforge.net/
-.. _SVG: http://en.wikipedia.org/wiki/Scalable_Vector_Graphics
 .. _Freesurfer: http://surfer.nmr.mgh.harvard.edu/
 .. _ipython: http://ipython.org/
-.. _SVG: http://en.wikipedia.org/wiki/Scalable_Vector_Graphics
-.. _Inkscape: http://inkscape.org/
