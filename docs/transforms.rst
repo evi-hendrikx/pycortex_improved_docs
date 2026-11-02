@@ -53,34 +53,14 @@ For a runnable example that loads a transform's ``magnet`` affine and reference 
 
 Accessing transforms
 ~~~~~~~~~~~~~~~~~~~~
-Similar to the surfaces, transforms can be access through two methods: direct command access, and the tab interface.
-
-Command access looks like this::
+::
 
     import cortex
     xfm = cortex.db.get_xfm('S1', 'fullhead', xfmtype='coord')
 
-Tab complete looks like this::
-
-    In [1]: import cortex
-    In [2]: cortex.db.S1.transforms
-    Out[2]: Transforms: [fullhead,retinotopy]
-
-    In [3]: cortex.db.S1.transforms['fullhead'].coord.xfm
-    Out[3]: 
-     [[-0.44486981846094426,
-       -0.0021363672818559996,
-       -0.03721181986487324,
-       46.62686084588364],
-      [0.005235315303737166,
-       -0.44485768384714863,
-       -0.03704886912935894,
-       60.165881316857195],
-      [-0.02001550497747565,
-       -0.020260819840215893,
-       0.24044994416882276,
-       12.698317611104553],
-      [0.0, 0.0, 0.0, 1.0]]
+This returns a :class:`cortex.xfm.Transform`; its ``.xfm`` attribute holds
+the 4x4 matrix. See :ref:`database-access` for browsing transforms through
+attributes and tab completion.
 
 
 .. _adding-transforms:

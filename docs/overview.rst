@@ -13,8 +13,6 @@ independent values per vertex can be shown separately with a 1D
 colormap, or combined into one flatmap with a 2D colormap (see
 :doc:`colormaps`) (example below).
 
-.. # TODO: update example with Mark's fake data version
-
 .. image:: flatmap_comparison.gif
    :width: 90%
    :align: center
@@ -66,60 +64,10 @@ least one functional-to-anatomical transform into the pycortex
 :term:`filestore` in the layout :doc:`database` expects. An example of this 
 minimal layout is given in :ref:`minimal-filestore-contents`.
 
-Every path below ends at the same place: surfaces + a transform in the filestore. 
-The difference is how much of that already exists for you.
-
-*I ran FreeSurfer's recon-all*
-
-* **Surfaces**: You have raw surfaces. Import via ``cortex.freesurfer.import_subj``. 
-
-* **Transform**: Compute a transforms with ``cortex.align.automatic``
-
-*I ran fMRIPrep*
-
-* **Surfaces**: You have raw surfaces. Import via ``cortex.freesurfer.import_subj``. If you used default locations, point cortex.freesurfer.import_subj at fMRIPrep's freesurfer/sub-<label> output directory 
-
-* **Transform**: fMRIPrep already computed a transform for you
-
-  * If you requested BOLD output in T1w space (--output-spaces T1w), your functional data already shares a grid with the anatomy. The transform is the identity matrix. 
-
-  * If you're using native-space BOLD instead, fMRIPrep provides the alignment you need at anat/sub-<label>_from-T1w_to-fsnative_mode-image_xfm.txt.
-
-
-*I have AFNI data*
-
-AFNI's BRIK/HEAD volumes and alignment matrices aren't natively read by pycortex, 
-so this path needs one conversion step before the usual flow applies:
-
-* **Surfaces**: AFNI itself doesn't typically produce cortical surface reconstructions. Most AFNI users get surfaces via SUMA/FreeSurfer underneath.  If you have a FreeSurfer subject directory from that step, import it the normal way with ``cortex.freesurfer.import_subj``.
-
-.. # TODO what if SUMA
-
-* **Volume data**: BRIK/HEAD can be read directly with nibabel, so no custom parser is needed. Just make sure the resulting array + affine are passed into pycortex's Volume object as you would  any NIfTI-derived data.
-
-* **Transform**: if you already have an alignment matrix from 3dAllineate or @auto_tlrc, convert it into a plain 4x4 array and load it the same way as any other transform (see :ref:`adding-transforms`). Otherwise, run cortex.align.automatic against your EPI reference image as usual.
-
-*I have BrainVoyager data*
-
-BrainVoyager uses its own native mesh and volume formats, so this path needs format conversion before either surfaces or transforms can go into the filestore:
-
-* **Surfaces**: BrainVoyager's .srf mesh files need to be converted into a format pycortex's importer reads (FreeSurfer binary or GIFTI) before running cortex.freesurfer.import_subj. 
-
-.. code-block:: python
-
-  import bvbabel
-  import nibabel.freesurfer.io as fsio
-
-  # 1. Read the BrainVoyager mesh
-  header, vertices, faces = bvbabel.srf.read_srf("subject_cortex.srf")
-
-  # 2. Write it out in FreeSurfer's binary surface format
-  fsio.write_geometry("lh.pial", vertices, faces)
-
-
-* **Volume data**: VMR/VTC files can be read with the bvbabel library; the resulting array and affine can then be used to build a pycortex Volume object as usual.
-
-* **Transform**: BrainVoyager's .trf alignment files need to be converted to a plain 4x4 matrix before they can be loaded as a transform. As with AFNI, cortex.align.automatic remains an option if you'd rather compute the alignment directly from your EPI reference image instead of converting an existing one.
+How you get there depends on what you already have; see
+:doc:`importing_other_software` for FreeSurfer, fMRIPrep, HCP, fsaverage,
+AFNI, BrainVoyager and other tools. To build surfaces from scratch, see
+:doc:`segmentation_guide`; to compute a transform, see :doc:`align`.
 
 
 **Phase 2: every time you have data to look at (this is most of what

@@ -22,9 +22,11 @@ Which page do I need?
      - Go to...
    * - Understand pycortex's vocabulary before reading further
      - :doc:`glossary`
-   * - Turn a FreeSurfer subject into pycortex surfaces (segmentation,
-       cutting, flattening)
+   * - Build and edit surfaces with FreeSurfer, or cut flatmaps by hand
      - :doc:`segmentation_guide`
+   * - Bring in surfaces, data or transforms from FreeSurfer, fMRIPrep, HCP,
+       fsaverage, AFNI, BrainVoyager, FSL or SPM
+     - :doc:`importing_other_software`
    * - Understand what's stored in the filestore / browse an existing
        subject's data
      - :doc:`database`
@@ -49,7 +51,7 @@ Which page do I need?
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Getting started
 
@@ -57,17 +59,18 @@ Which page do I need?
    install
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Setting up subjects
 
    segmentation_guide
+   importing_other_software
    database
    align
    transforms
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Visualizing data
 
@@ -76,7 +79,7 @@ Which page do I need?
    userguide/webgl
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: ROIs
 
@@ -84,14 +87,14 @@ Which page do I need?
    roidraw
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Example gallery
 
    auto_examples/index
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Features
 
@@ -99,7 +102,7 @@ Which page do I need?
    features/bumpy_flatmap
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Reference
 
@@ -116,6 +119,6 @@ If you use pycortex in published work, please cite the `pycortex paper <http://d
 *Gao JS, Huth AG, Lescroart MD and Gallant JL (2015) Pycortex: an interactive surface visualizer for fMRI. Front. Neuroinform. 9:23. doi: 10.3389/fninf.2015.00023*
 
 
-For a list of recent changes, please see the `releases on GitHub <https://github.com/gallantlab/pycortex/releases/>`_.
+This documentation was built for pycortex version |release|. For a list of recent changes, please see the `releases on GitHub <https://github.com/gallantlab/pycortex/releases/>`_.
 
 This documentation is still under development. Please report errors or bugs at https://github.com/gallantlab/pycortex/issues.

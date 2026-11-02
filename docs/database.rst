@@ -99,12 +99,74 @@ can plot data on their surface is just:
   one per functional dataset you intend to align and plot, not one per
   subject.
 
-How those files get produced is up to you. :doc:`overview` and
-:doc:`segmentation_guide` walk through the FreeSurfer-based pipeline
-this documentation otherwise assumes, but pycortex doesn't check where
+How those files get produced is up to you. :doc:`importing_other_software`
+covers FreeSurfer and other tools, but pycortex doesn't check where
 the files came from — any process (a different segmentation tool, a
 transform computed by your own preprocessing pipeline) that leaves
 correctly-formatted files in these locations works just as well.
+
+
+.. _database-access:
+
+Browsing the database
+---------------------
+
+``cortex.db`` is the entry point to the filestore. Each kind of data has a
+``get_*`` function::
+
+    import cortex
+    pts, polys = cortex.db.get_surf('S1', 'fiducial', merge=True)
+    xfm = cortex.db.get_xfm('S1', 'fullhead')            # a cortex.xfm.Transform
+    mask = cortex.db.get_mask('S1', 'fullhead', 'thick')  # boolean (z, y, x) array
+    curv = cortex.db.get_surfinfo('S1', 'curvature')      # a cortex.Vertex
+
+``get_surf`` returns ``(left, right)``, each a ``(pts, polys)`` pair, for
+both hemispheres. With ``merge=True`` the hemispheres are stacked **left,
+then right** into one ``(pts, polys)``, with the right hemisphere's polygon
+indices shifted to match; with ``hemisphere='lh'`` or ``'rh'`` only that
+hemisphere's ``(pts, polys)`` is returned. If a subject has no ``fiducial``
+surface file, ``get_surf`` returns the average of ``wm`` and ``pia``.
+
+``get_xfm`` returns the ``coord`` representation by default; pass
+``xfmtype='magnet'`` for the other one (see :doc:`transforms`). See
+:ref:`database-masks` for the mask types and :ref:`database-surfinfo` for
+the available surface info.
+
+The same data can be browsed through attributes, which supports tab
+completion in ipython_::
+
+    In [1]: cortex.db
+    Out[1]:
+    Pycortex database
+      Subjects:
+       S1
+
+    In [2]: cortex.db.S1.surfaces
+    Out[2]: Surfaces: [flat, wm, pia, inflated]
+
+    In [3]: left, right = cortex.db.S1.surfaces.inflated.get()
+
+    In [4]: cortex.db.S1.transforms
+    Out[4]:
+    Available transforms for S1:
+    fullhead
+    retinotopy
+
+    In [5]: cortex.db.S1.transforms.fullhead
+    Out[5]: Types: coord, magnet
+
+    In [6]: cortex.db.S1.transforms.fullhead.coord.xfm   # the 4x4 matrix
+    In [7]: cortex.db.S1.transforms.fullhead.masks['thick']
+
+Attribute access only works for names that are valid Python identifiers,
+so a subject called ``S1-test`` cannot be reached as ``cortex.db.S1-test``.
+Every level also supports item access, which works for any name::
+
+    cortex.db['S1-test'].surfaces['flat'].get()
+    cortex.db['S1-test'].transforms['fullhead']['coord'].xfm
+
+You can also test for a subject with ``'S1-test' in cortex.db`` and iterate
+over the subject names with ``for subject in cortex.db``.
 
 
 Anatomical scans
@@ -141,73 +203,6 @@ The surface files for a specific subject and hemisphere must have the same numbe
 The fiducial geometry must be available for a subject for pycortex to do anything with them at all. The flat geometry is only needed once you want to flatten — a subject with no ``flat`` surface works fine for 3D/WebGL visualization, it just can't be flattened until you add one. Surfaces must be stored in VTK v. 1 format (also known as the ASCII format).
 
 
-Accessing surfaces
-~~~~~~~~~~~~~~~~~~
-Two methods exist for accessing the surface data once they are committed to the database: direct command access, or via a convenient tab completion interface.
-
-Command access
-~~~~~~~~~~~~~~
-For the direct command access, there are two call signatures::
-
-    import cortex
-    pts, polys = cortex.db.get_surf('S1', 'fiducial', merge=True)
-
-This returns the points and polygons of the given subject and surface type. Hemisphere defaults to "both", and since ``merge`` is true, they are vertically stacked **left, then right**. The polygon indices are shifted up for the right hemisphere to make a single unified geometry.
-
-With ``merge=False``, the return looks different::
-
-    left, right = cortex.db.get_surf('S1', 'fiducial', merge=False)
-    lpts, lpolys = left
-    rpts, rpolys = right
-
-If you only specify ``hemisphere='left'`` or ``'right'``, only one hemisphere will be returned, and the return will again be only points, polygons, and normals.
-
-Tab interface
-~~~~~~~~~~~~~
-An alternate way to browse the database is using ipython_ and its tab completion feature. If you type the following::
-
-    In [1]: import cortex
-    In [2]: cortex.db.
-
-Then press <<TAB>>, a list of subjects will appear. For example::
-
-    In [3]: cortex.db.
-     cortex.db.get_anat     cortex.db.get_overlay  cortex.db.get_view     cortex.db.save_view
-     cortex.db.get_cache    cortex.db.get_surf     cortex.db.get_xfm      cortex.db.save_xfm
-     cortex.db.get_mask     cortex.db.get_surfinfo cortex.db.S1
-
-Selecting the subject **S1** and pressing <<TAB>> gives you additional choices::
-
-    In [4]: cortex.db.S1.
-     cortex.db.S1.filestore  cortex.db.S1.surfaces
-     cortex.db.S1.subject    cortex.db.S1.transforms
-
-    In [5]: cortex.db.S1.surfaces.
-     cortex.db.S1.surfaces.flat     cortex.db.S1.surfaces.pia
-     cortex.db.S1.surfaces.inflated cortex.db.S1.surfaces.wm
-
-Selecting "surfaces" gives you a list of all surface types associated with that subject.
-
-Finally, selecting one surface type will give you two new functions: get, and show::
-    
-    In [6]: left, right = cortex.db.S1.surfaces.inflated.get()
-    In [7]: cortex.db.S1.surfaces.fiducial.show()
-
-Subject names that are not valid Python identifiers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Attribute access only works for names that happen to be valid Python
-identifiers, so a subject called ``S1-test`` cannot be reached as
-``cortex.db.S1-test``. Every level of the tab interface also supports item
-access, which works for any name::
-
-    In [8]: cortex.db['S1-test']
-    In [9]: cortex.db['S1-test'].surfaces['flat'].get()
-    In [10]: cortex.db['S1-test'].transforms['fullhead']['coord'].xfm
-
-You can also test for a subject with ``'S1-test' in cortex.db`` and iterate
-over the subject names with ``for subject in cortex.db``.
-
-
 Adding new surfaces
 ~~~~~~~~~~~~~~~~~~~
 Surface management is implemented through your file manager. To add a new surface to an existing subject, copy the surface file into ``{$FILESTORE}/{$SUBJECT}/surfaces/`` with the format ``{type}_{hemisphere}.{format}``, where ``hemisphere`` is **lh** or **rh**, and format is one of **OFF**, **VTK**, or an **npz** file with keys 'pts' and 'polys'. If you have a python session with pycortex imported already, please reload the session. The new surfaces should be accessible via the given interfaces immediately.
@@ -215,7 +210,7 @@ Surface management is implemented through your file manager. To add a new surfac
 In order to adequately utilize all the functions in pycortex, please add the **fiducial**, **inflated**, and **flat** geometries for both hemispheres. Again, make sure that all the surface types for a given subject and hemisphere have the same number of vertices, otherwise unexpected things may happen!
 
 See :ref:`database-freesurfer-import` and :ref:`database-autoflatten` in
-:doc:`segmentation_guide` for importing a subject from FreeSurfer and
+:doc:`importing_other_software` for importing a subject from FreeSurfer and
 flattening its surfaces.
 
 
@@ -230,6 +225,8 @@ functional reference volume it was computed against) and any cached
 ``mask_{type}.nii.gz`` files. See :doc:`transforms` for what a transform
 stores and how to add one, and :ref:`database-masks` for the masks.
 
+
+.. _database-surfinfo:
 
 Surface info
 ------------

@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:14.539** total execution time for 49 files **from all galleries**:
+**00:43.101** total execution time for 53 files **from all galleries**:
 
 .. container::
 
@@ -32,11 +32,14 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_datasets_plot_data_with_alpha.py` (``../examples/datasets/plot_data_with_alpha.py``)
-     - 00:10.096
+   * - :ref:`sphx_glr_auto_examples_hcp_plot_hcp_fs_lr.py` (``../examples/hcp/plot_hcp_fs_lr.py``)
+     - 00:38.139
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_quickflat_plot_thickness_nanmean.py` (``../examples/quickflat/plot_thickness_nanmean.py``)
-     - 00:04.443
+   * - :ref:`sphx_glr_auto_examples_surface_analyses_plot_bumpy_flatmap.py` (``../examples/surface_analyses/plot_bumpy_flatmap.py``)
+     - 00:04.962
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_datasets_plot_data_with_alpha.py` (``../examples/datasets/plot_data_with_alpha.py``)
+     - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_datasets_plot_dataset_arithmetic.py` (``../examples/datasets/plot_dataset_arithmetic.py``)
      - 00:00.000
@@ -98,6 +101,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_quickflat_plot_sulci.py` (``../examples/quickflat/plot_sulci.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_quickflat_plot_thickness_nanmean.py` (``../examples/quickflat/plot_thickness_nanmean.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_quickflat_plot_zoom_to_roi.py` (``../examples/quickflat/plot_zoom_to_roi.py``)
      - 00:00.000
      - 0.0
@@ -129,6 +135,12 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_surface_analyses_plot_tissots_indicatrix.py` (``../examples/surface_analyses/plot_tissots_indicatrix.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_timeseries_encoding_model_timeseries.py` (``../examples/timeseries/encoding_model_timeseries.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_timeseries_rgb_timeseries.py` (``../examples/timeseries/rgb_timeseries.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_utils_mni_to_subject.py` (``../examples/utils/mni_to_subject.py``)
