@@ -1,4 +1,4 @@
-Surface Database
+Subject database
 ================
 
 Every subject in pycortex is built around the same handful of pieces:

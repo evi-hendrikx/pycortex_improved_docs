@@ -3,7 +3,7 @@
 .. _api_reference:
 
 ====================
-Python API Reference
+Python API reference
 ====================
 
 These are the classes and functions in pycortex.

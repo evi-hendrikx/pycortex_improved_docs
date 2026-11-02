@@ -1,5 +1,5 @@
 ====================
-Surface Segmentation
+Surface segmentation
 ====================
 
 Pycortex does not implement its own segmentation — that's a hard, mature

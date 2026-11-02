@@ -1,5 +1,5 @@
-Transform formats
-=================
+Transforms
+==========
 
 The anatomical surfaces in the :doc:`database` and a functional scan don't
 start out in the same coordinate space. A :term:`transform <xfm / transform>`

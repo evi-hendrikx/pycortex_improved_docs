@@ -1,5 +1,5 @@
-Pycortex Data Structures
-========================
+Data classes
+============
 
 .. currentmodule:: cortex.dataset
 

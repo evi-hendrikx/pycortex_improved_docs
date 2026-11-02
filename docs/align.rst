@@ -1,5 +1,5 @@
-Alignments
-==========
+Aligning functional data
+========================
 
 A functional (EPI) scan and the anatomical scan used to build a subject's
 surfaces (see :doc:`segmentation_guide`) are almost never acquired with the

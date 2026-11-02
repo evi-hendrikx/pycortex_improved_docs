@@ -1,4 +1,4 @@
-WebGL Viewer
+WebGL viewer
 ============
 
 The WebGL viewer shows data on a subject's cortical surface in a web
