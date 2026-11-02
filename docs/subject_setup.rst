@@ -25,7 +25,7 @@ scratch has these phases:
 
 **1. Segmentation**
 
-FreeSurfer will automatically discern where white matter and gray matter are in the brain. The software is good but not perfect, so you will need to look through its results and fine-tune the surfaces it generates so we can generate a 3D model of the brain. See :doc:`segmentation_guide`.
+FreeSurfer automatically finds the white matter and gray matter in the anatomical scan and builds the surfaces. It is good but not perfect, so you will need to check its results and correct the surfaces. See :doc:`segmentation_guide`.
 
 Once the segmentation is done, import the subject into pycortex with ``cortex.freesurfer.import_subj``. See :ref:`database-freesurfer-import`.
 
@@ -42,4 +42,4 @@ Compute a transform from each functional scan to the anatomy with :doc:`align`. 
 
 **4. Labeling ROIs**
 
-Here you will project functional data (semantic betas or localizer data, as well as retinotopic) onto the flatmaps, allowing you to label Regions of Interest on the brain - areas responsive to faces, scenes, or whatever else we're analyzing. See :doc:`rois`.
+Draw regions of interest on the flatmap, usually guided by functional data shown on it, such as localizer contrasts or retinotopic maps. See :doc:`rois`.
