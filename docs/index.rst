@@ -39,6 +39,8 @@ Which page do I need?
    * - Define and use regions of interest
      - :doc:`rois` (SVG/Inkscape workflow) and :doc:`roidraw` (in-browser
        drawing add-on)
+   * - Get per-vertex values from volume data
+     - :doc:`mapping`
    * - Render a static 2D image of data on a flatmap
      - :doc:`quickflat`
    * - Get an interactive 3D/flat viewer
@@ -81,6 +83,7 @@ Which page do I need?
    :caption: Visualizing data
 
    dataset
+   mapping
    quickflat
    userguide/webgl
    colormaps

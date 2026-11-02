@@ -87,10 +87,10 @@ The :class:`Volume` and :class:`Vertex` objects support standard numpy operation
 
 See :ref:`sphx_glr_auto_examples_datasets_plot_volume.py`,
 :ref:`sphx_glr_auto_examples_datasets_plot_vertex.py`, and
-:ref:`sphx_glr_auto_examples_datasets_plot_volume_to_vertex.py` (mapping
-volume data onto vertices) for runnable examples, and
+:ref:`sphx_glr_auto_examples_datasets_plot_volume_to_vertex.py` for runnable examples, and
 :ref:`sphx_glr_auto_examples_datasets_plot_dataset_arithmetic.py` for the
-numpy-style operations mentioned above.
+numpy-style operations mentioned above. To turn volume data into vertex
+data, see :doc:`mapping`.
 
 RGB data
 ~~~~~~~~
