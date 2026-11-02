@@ -1,31 +1,93 @@
+WebGL Viewer
+============
 
-WebGL Viewer Overview
-=====================
-
-WebGL viewers enable interactive 3D displays of brain data in the web browser using a simple set of commands (see demo examples). The use of a web browser as the front end for pycortex also allows an unprecedented level of interactivity. For example, the anatomical surface can be flattened interactively simply by dragging a slider. This interactive design helps the user to develop a clear sense of the correspondence between flattened and folded surfaces. 
+The WebGL viewer shows data on a subject's cortical surface in a web
+browser. You can drag a slider to unfold the brain from folded to inflated
+to flat, which builds a sense of how the flatmap corresponds to the folded
+cortex. In the viewer you can:
 
 - adjust camera angle and zoom in real time
 - toggle display of ROIs and various labels
 - switch between multiple datasets
 - flatten and inflate cortical surface
+- play back time-series data
 - create scripted animations
 - select points by clicking on them
 - switch between colormaps
-
-Pycortex can also display temporally varying time-series data on the cortical surface in real time. This allows simultaneous visualization of the experimental paradigm and the functional data in real time 
-
-It is simple to post pycortex visualizations to a web page for public viewing. These static visualizations are generated using a simple command that generates a single web page with most resources embedded directly. The surface structure, data, and the webpage can then be posted to any public facing web site. For example, the online Neurovault data repository (http://neurovault.org) now makes use of pycortex, and any fMRI data uploaded to Neurovault can be visualized automatically in pycortex. These visualizations are visible at a static web address that can be referenced in papers and shared with anyone with a web browser.
-
 
 .. seealso::
 
    You can draw, edit, and export ROIs directly in the WebGL viewer with the
    :doc:`pycortex-roidraw </roidraw>` add-on.
 
-Using the WebGL Viewer
-----------------------
 
-There are two ways to create a WebGL viewer. A **dynamic viewer** is temporary viewer that is hosted by the python process that generated it. A **static viewer** is a viewer that is saved permanently to disk and will persist beyond the lifetime of the python process. Using a static viewer requires hosting the created directory with a webserver such as nginx.
+Opening a viewer
+----------------
+
+There are two kinds of viewer. A **dynamic viewer**, from
+:func:`cortex.webgl.show` (alias ``cortex.webshow``), is served by your
+Python process and lasts as long as it does::
+
+    import cortex
+
+    volume = cortex.Volume.random("S1", "fullhead")
+    viewer = cortex.webshow(volume)
+
+A **static viewer**, from :func:`cortex.webgl.make_static`, is a directory
+with an ``index.html`` and the data, which you can keep, share or put on a
+website::
+
+    cortex.webgl.make_static("my_viewer", volume)
+
+Open it through a web server, not by double-clicking ``index.html`` (the
+browser refuses to load the data from ``file://`` paths). Locally,
+``python -m http.server`` in that directory is enough.
+
+Both take any :doc:`dataview </dataset>`, or a dict of named dataviews to
+switch between in the viewer (with **+**/**-**). A 4D ``Volume`` or 2D
+``Vertex`` is played back as a movie. Useful options:
+
+* ``overlays_visible`` / ``labels_visible``: which overlay layers (``'rois'``,
+  ``'sulci'``, …) and labels are shown at the start.
+* ``types``: extra surface types to include, ``('inflated',)`` by default.
+* ``recache=True``: rebuild the compressed surfaces, e.g. after changing a
+  subject's surfaces or ``overlays.svg``.
+* ``show`` only: ``open_browser``, ``port``, ``autoclose``, and
+  ``pickerfun``, a function called with the voxel, vertex and hemisphere
+  of every point you click.
+* ``make_static`` only: ``anonymize=True`` renames the subject's files for
+  public sharing; ``html_embed`` inlines the scripts into ``index.html``.
+
+See :ref:`sphx_glr_auto_examples_webgl_single_dataset.py`,
+:ref:`sphx_glr_auto_examples_webgl_multiple_datasets.py` and
+:ref:`sphx_glr_auto_examples_webgl_static.py`.
+
+
+Controlling the viewer from Python
+----------------------------------
+
+``cortex.webshow`` returns a handle to the open browser tab::
+
+    viewer = cortex.webshow(volume)
+    viewer.getImage("brain.png", size=(1920, 1080))  # screenshot
+    viewer.addData(other=other_volume)                # push more data
+    viewer.save_view("S1", "my_view")                 # save the camera view
+    viewer.get_view("S1", "my_view")                  # and restore it
+
+``viewer.makeMovie`` renders an animation between keyframes to PNG frames.
+See :doc:`/features/camera_views_animations` for saved views and
+animations.
+
+To render images in a script without opening a browser, use
+:func:`cortex.export.save_3d_views` or :func:`cortex.export.plot_panels`
+with ``headless=True`` (needs Playwright); see
+:ref:`sphx_glr_auto_examples_webgl_plot_panels_headless.py`.
+
+
+Using the viewer
+----------------
+
+The viewer is driven with the keyboard, the mouse and the control panel.
 
 
 Keyboard Shortcuts
@@ -148,17 +210,5 @@ labels  toggle roi labels
 ======= ===================
 
 
-WebGL Viewer Technical Details
-------------------------------
-
-Pycortex uses custom shaders that implement pixel-based mapping. During 3D graphics rendering, the color of each pixel is determined by some predefined code at the fragment shading step. Under a traditional fixed-function pipeline, fragment shading is performed by a rasterizer that implements vertex-based mapping (Woo et al., 1999). In contrast, the fragment shader in pycortex projects each pixel into the functional space in 3D, and then samples the underlying volume data by reading from a texture. Nearest-neighbor or trilinear sampling is automatically performed by OpenGL when the data is read from the texture. This generates a fully interactive and accurate real-time visualization.
-
-The webgl module contains code that parses and generates the HTML and javascript code required to display surface data in a web browser. It provides two possible use cases: a dynamic view that can be controlled by a back end python web server, and a static view that generates static HTML files for upload into an existing web server. The OpenCTM library (Geelnard, 2009) is used to compress the surface mesh into a form that can be utilized by the web browser. If a dynamic view is requested, the webgl module sets up a local web server with all the required surface and data files accessible to the web browser. If a static view is requested, all HTML and javascript code is embedded into a single HTML document and saved to a set of files. Data (in the form of compressed mosaic images) and surface structures are stored separately. These standalone visualizations can then be copied to a web server to be shared with colleagues, included as links in published articles, or shared online with a broad audience.
-
-The data display can be modified interactively in numerous ways. The dynamic view has two sliding windows that contain display options. The **unfold** slider in the control panel linearly interpolates the shape of the cortical mesh between the original (folded) anatomical, inflated, and flattened surfaces. This allows the unfolding process to be visualized continuously, and it clarifies the correspondence between 3D anatomical features and the cortical flatmap. The sliding window located at the top contains options that change how the data is displayed. Different colormaps can be selected and the colormap ranges can be altered dynamically. 2D colormaps are also supported, allowing two datasets to be contrasted simultaneously. Multiple datasets can be loaded and compared directly by simply toggling between them. Sliders are provided to change the transparency of the dropout, overlay, data, and curvature layers.
-
-Pycortex also includes a javascript plugin architecture that allows new interactive visualizations to be developed easily. For example, the static viewer released with Huth et al. (2012) http://gallantlab.org/brainviewer/huthetal2012/ contains a plugin that allows the user to visualize how 1765 distinct semantic features are mapped across the cortical surface (Figure 7). Clicking a point on the brain picks the closest voxel and the viewer displays the semantic category tuning for the associated voxel.
-
-Finally, pycortex provides a bi-directional communication framework between python and javascript, so that actions in javascript can be scripted and manipulated in python. This powerful interaction dynamic allows exploratory data analysis in a way never before possible for fMRI.
-
-For further details see *Gao JS, Huth AG, Lescroart MD and Gallant JL (2015) Pycortex: an interactive surface visualizer for fMRI. Front. Neuroinform. 9:23. doi: 10.3389/fninf.2015.00023*
+For how the viewer renders data with :term:`pixel-wise sampling`, and the
+design behind it, see the :ref:`pycortex paper <citation>`.
