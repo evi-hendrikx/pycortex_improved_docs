@@ -106,29 +106,13 @@ using nothing but the bundled ``S1`` subject, see
 
 **Phase 3: have fun exploring!**
 
-Once the basics work, a good chunk of pycortex isn't about producing one
-final figure — it's tools for poking at your data and your surfaces.
-Some favorites from the gallery, each real and runnable:
+Once the basics work, the Example and Features section of the sidebar collect
+optional extras. Recently added features include:
 
-.. * Compare several datasets side by side in one interactive viewer —
-..   ``examples/webgl/multiple_datasets.py``.
-
-* Do arithmetic directly on ``Volume``/``Vertex``/``Dataset`` objects —
-  :ref:`sphx_glr_auto_examples_datasets_plot_dataset_arithmetic.py`.
-* Measure distances or draw paths *along the folded cortical surface*
-  rather than through 3D space —
-  :ref:`sphx_glr_auto_examples_surface_analyses_plot_geodesic_distance.py`
-  and
-  :ref:`sphx_glr_auto_examples_surface_analyses_plot_geodesic_path.py`.
-* Carve out and work with a reusable sub-patch of a surface —
-  :ref:`sphx_glr_auto_examples_surface_analyses_plot_subsurfaces.py`.
-* See exactly how much a flatmap distorts the brain, visualized as
-  Tissot's indicatrix (equal-size circles on the folded surface, drawn
-  on the flatmap to show where they stretch or shrink) —
-  :ref:`sphx_glr_auto_examples_surface_analyses_plot_tissots_indicatrix.py`.
-* Take full manual control over how flatmap layers are drawn and
-  composited —
-  :ref:`sphx_glr_auto_examples_quickflat_plot_advanced_compositing.py`.
+* :doc:`features/camera_views_animations` — jump to standard or saved
+  camera views, and build keyframe animations rendered frame by frame.
+* :doc:`features/bumpy_flatmap` — give the flatmap shaded relief, so the
+  folding stays readable after unfolding.
 
 :doc:`auto_examples/index` has plenty more — most examples are short and
 meant to be copied and adapted directly rather than read end to end.
