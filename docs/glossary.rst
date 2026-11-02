@@ -31,7 +31,7 @@ below links to the page that explains it in full.
         though pycortex's current pipeline gets it from FreeSurfer's own
         surface reconstruction). It's the "ground truth" undistorted
         geometry that every other surface (inflated, flat) is derived from
-        and must share a vertex count with. See :doc:`segmentation_guide`.
+        and must share a vertex count with. See :doc:`subject_setup`.
 
     inflated surface
         The fiducial surface with sulci and gyri smoothed out into a
@@ -44,7 +44,7 @@ below links to the page that explains it in full.
         cortex can be viewed at once with minimal size distortion. "Flatmap"
         also refers to the rendered image or view of data on this surface
         (e.g. what :func:`cortex.quickflat.make_figure` produces). See
-        :doc:`segmentation_guide`.
+        :doc:`flattening`.
 
     xfm / transform
         The affine matrix that maps coordinates from a subject's fiducial

@@ -1,55 +1,17 @@
-===================================
-Surface Segmentation and Flattening
-===================================
-
-Pycortex needs a triangular mesh of each subject's cortical surface before
-it can put any functional data on a flatmap or in the WebGL viewer — see
-:doc:`overview` for how this surface fits into the rest of the pipeline.
-That mesh has to come from somewhere: it's derived from a segmentation of
-the subject's own anatomical MRI, identifying the boundary between white
-matter and gray matter, and between gray matter and dura/CSF.
-
-This is done per-subject, not with a generic template (e.g. ``fsaverage``),
-because individual cortical folding patterns vary substantially between
-people; averaging surfaces across subjects would blur exactly the
-fine-grained spatial detail pixel-wise sampling (:doc:`overview`) is
-designed to preserve. The undistorted mesh reconstructed at this boundary
-is called the :term:`fiducial surface`, and every other surface pycortex
-uses (:term:`inflated <inflated surface>`, :term:`flat <flat surface /
-flatmap>`) is a deformation of it that must keep the same vertex count and
-correspondence, since that's what lets data plotted on one surface line up
-with the same data on another.
+====================
+Surface Segmentation
+====================
 
 Pycortex does not implement its own segmentation — that's a hard, mature
 problem already solved by dedicated tools. It wraps FreeSurfer_, which
 performs the segmentation and produces per-vertex-corresponding pial/white
 matter surfaces automatically (imperfectly — manual correction is usually
-still needed, covered below). Caret_ is another option some labs use for
-the same step, though pycortex's tooling here is built around FreeSurfer.
-What pycortex *does* own is everything downstream of that: cutting the
-surface, flattening it, and importing the result into the
-:doc:`database`.
+still needed, covered below). What pycortex *does* own is everything
+downstream of that: importing the result into the :doc:`database`, and
+:doc:`cutting and flattening <flattening>` the surface. This page describes
+how to do the segmentation using FreeSurfer.
 
 .. _FreeSurfer: http://surfer.nmr.mgh.harvard.edu/
-.. _Caret: http://brainvis.wustl.edu/wiki/index.php/Caret:Download
-
-This is a guide for the full process of making flatmaps, which allow us to visualize brain data in a more intuitive way than voxelized 3D images of brain data. There are three main phases of the process:
-
-**1. Segmentation**
-
-Freesurfer will automatically discern where white matter and gray matter are in the brain. The software is good but not perfect, so you will need to look through its results and fine-tune the surfaces it generates so we can generate a 3D model of the brain.
-
-
-**2. Cutting and flattening**
-
-The brain model is exported to a 3D modeling program called Blender, where you will make the cuts necessary to transform a 3D object into a flattened map with as little warping as possible.
-
-
-**3. Labeling ROIs**
-
-Here you will project functional data (semantic betas or localizer data, as well as retinotopic) onto the flatmaps, allowing you to label Regions of Interest on the brain - areas responsive to faces, scenes, or whatever else we're analyzing.
-
-In this guide, we will go over the first two steps.
 
 
 
@@ -203,111 +165,3 @@ as well as add voxels to regions that appear to have white matter but aren't inc
 outline.
 
 Autorecon on the white matter surface (``run_freesurfer_recon(subject, 'wm')``) should take about 2-4 hours. These manual edits are an iterative process; when it's done, go back and look over the 3D surface, and make any changes that seem necessary. New spikes can appear in unexpected places, so three or four iterations may be needed, probably more if you are just starting to learn how to do it.
-
-
-Importing into pycortex
-#######################
-
-Once the segmentation is done, import the subject into pycortex with
-``cortex.freesurfer.import_subj``, which by default also cuts and
-flattens the surfaces automatically. See :ref:`database-freesurfer-import`.
-To cut the surfaces by hand instead, continue below.
-
-
-
-.. _making-cuts:
-
-Making cuts
-##################################
-
-After completing the segmentation phase, the next step is to make cuts in the brain surface to prepare it for flattening. Cuts are necessary because a closed, curved surface like the cortex cannot be laid flat without tearing it somewhere — the same reason no world map projection is perfectly accurate everywhere on a sphere. Making the cuts along real anatomical/sulcal boundaries (rather than arbitrarily) keeps the resulting distortion small and keeps the seams in visually unimportant places. This process involves creating cuts along the brain's sulci to transform the 3D surface into a 2D flatmap with minimal distortion.
-
-PyCortex itself provides three different methods for cutting and flattening brain surfaces, all reached through ``cortex.segment.cut_surface()`` (``flatten_with=``) and all requiring you to place the cuts by hand in Blender first:
-
-**1. Freesurfer (Recommended)**
-The traditional and most reliable method that uses Freesurfer's `mris_flatten` command. This method produces high-quality flatmaps with minimal distortion but takes approximately 2 hours per hemisphere.
-
-**2. SLIM**
-An experimental method using the SLIM algorithm that is very fast but tends to leave more distortions in the flatmap. Requires additional installation of the SLIM dependency.
-
-**3. Blender**
-A newer method that uses Blender's UV unwrapping capabilities for faster flattening (typically 5-15 minutes per hemisphere). While faster, it may introduce more distortion compared to Freesurfer.
-
-**4. autoflatten (external, skips manual cutting)**
-Not part of pycortex — a separate package by Matteo Visconti di Oleggio Castello: autoflatten_ (source_). Instead of you cutting in Blender, it maps cuts onto your subject automatically from a template via surface-based registration, then flattens with either a fast JAX-accelerated backend or FreeSurfer's ``mris_flatten``. ``cortex.freesurfer.import_subj`` runs it by default; see :ref:`database-autoflatten`.
-
-.. _autoflatten: https://gallantlab.org/autoflatten/
-.. _source: https://github.com/mvdoc/autoflatten
-
-The remaining three methods all begin with manual cutting in Blender, where you'll make cuts to prepare the surface for flattening. Once the cuts are complete, the cut surface is automatically flattened using your chosen method. Finally, the resulting flatmap is imported into PyCortex for visualization and analysis.
-
-You may follow the steps below or a `Python notebook <https://colab.research.google.com/github/gallantlab/pycortex/blob/main/examples/quickstart/fmri_flattening.ipynb>`_.
-
-Step 1: Manual Cutting in Blender
-***************************************************
-
-Start the cutting process by calling `cortex.segment.cut_surface()`. This function will create a Blender file with your brain surface, open Blender automatically, and allow you to make manual cuts for the left hemisphere.
-
-.. code-block:: python
-
-    import cortex
-    
-    cortex.segment.cut_surface(
-        "sub-01",                   # Your subject ID
-        "lh",                       # Left hemisphere
-        name="flatten",             # Name for this flattening attempt
-        flatten_with="freesurfer",  # Or "SLIM" or "blender"
-        recache=True,               # Force recache of the subject
-        do_import_subject=False,    # Don't import until both hemispheres are done
-    )
-
-To make the cuts please watch the `cutting tutorial video <https://www.youtube.com/watch?v=D4tylQ_mMuM>`_.
-
-Step 2: Repeat for Right Hemisphere
-***************************************************
-
-After completing the left hemisphere, repeat the process for the right hemisphere.
-
-.. code-block:: python
-
-    cortex.segment.cut_surface(
-        "sub-01",                   # Your subject ID
-        "rh",                       # Right hemisphere
-        name="flatten",             # Name for this flattening attempt
-        flatten_with="freesurfer",  # Or "SLIM" or "blender"
-        recache=True,               # Force recache of the subject
-        auto_overwrite=True,        # Overwrite PyCortex record
-        do_import_subject=True,     # Import both hemispheres when done
-    )
-
-After completing both hemispheres, your flatmap will be automatically imported into PyCortex and ready for visualization and analysis.
-
-
-Step 3: Verify the cuts
-***************************************************
-
-After completing both hemispheres, your flatmap will be automatically imported into PyCortex and ready for visualization and analysis.
-
-To verify that your cuts and flattening worked correctly, you can visualize the results using PyCortex's visualization tools. Here's a verification script:
-
-.. code-block:: python
-
-    import cortex
-    import numpy as np
-    from matplotlib import pyplot as plt
-    
-    test_data = np.random.rand(1000)  # Random data
-    
-    vol = cortex.Volume(
-        test_data,
-        subject="sub-01",
-        xfmname="full",
-        vmin=0,
-        vmax=1
-    )
-    
-    # Display the visualization on the flatmap
-    cortex.quickshow(vol, with_colorbar=True, recache=True)
-    plt.show()
-
-Alternatively, you may follow one of the examples from the gallery.

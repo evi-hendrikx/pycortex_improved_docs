@@ -211,9 +211,8 @@ surface. This correspondence is what lets data mapped onto one surface be
 shown on all the others. FreeSurfer surfaces have it, but pycortex does not
 check it, and mismatched surfaces break in unexpected ways.
 
-See :ref:`database-freesurfer-import` and :ref:`database-autoflatten` in
-:doc:`importing_other_software` for importing a subject from FreeSurfer and
-flattening its surfaces. To add a surface by hand, copy it into
+See :ref:`database-freesurfer-import` for importing a subject from
+FreeSurfer and :doc:`flattening` for flattening its surfaces. To add a surface by hand, copy it into
 ``{filestore}/{subject}/surfaces/`` with the name above. ``get_surf`` finds
 it immediately; the attribute interface (``cortex.db.S1.surfaces``) only
 after restarting Python.

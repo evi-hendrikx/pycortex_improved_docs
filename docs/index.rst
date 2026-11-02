@@ -22,8 +22,12 @@ Which page do I need?
      - Go to...
    * - Understand pycortex's vocabulary before reading further
      - :doc:`glossary`
-   * - Build and edit surfaces with FreeSurfer, or cut flatmaps by hand
+   * - Set up a new subject from scratch
+     - :doc:`subject_setup`
+   * - Build and edit surfaces with FreeSurfer
      - :doc:`segmentation_guide`
+   * - Cut and flatten surfaces into flatmaps
+     - :doc:`flattening`
    * - Bring in surfaces, data or transforms from FreeSurfer, fMRIPrep, HCP,
        fsaverage, AFNI, BrainVoyager, FSL or SPM
      - :doc:`importing_other_software`
@@ -63,8 +67,10 @@ Which page do I need?
    :hidden:
    :caption: Setting up subjects
 
+   subject_setup
    segmentation_guide
    importing_other_software
+   flattening
    database
    align
    transforms

@@ -14,8 +14,8 @@ script.
 
 "Phase 1" (surfaces + alignment) isn't run here because it's already done
 for ``S1`` -- its surfaces and its ``fullhead`` transform are already
-sitting in the filestore, which is exactly what :doc:`/segmentation_guide`
-and :doc:`/align` produce for a subject of your own. If you're starting
+sitting in the filestore, which is exactly what :doc:`/subject_setup`
+walks through for a subject of your own. If you're starting
 from your own subject rather than ``S1``, that setup comes first;
 everything below is what you'd run afterward, every time you have new
 data to look at.

@@ -66,8 +66,8 @@ minimal layout is given in :ref:`minimal-filestore-contents`.
 
 How you get there depends on what you already have; see
 :doc:`importing_other_software` for FreeSurfer, fMRIPrep, HCP, fsaverage,
-AFNI, BrainVoyager and other tools. To build surfaces from scratch, see
-:doc:`segmentation_guide`; to compute a transform, see :doc:`align`.
+AFNI, BrainVoyager and other tools. To set up a subject from scratch, see
+:doc:`subject_setup`.
 
 
 **Phase 2: every time you have data to look at (this is most of what
