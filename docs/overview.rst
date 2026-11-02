@@ -76,8 +76,8 @@ pycortex does)**
 .. code-block:: text
 
     functional data (a voxel array) + a mask
-            │  Combinethe subject + transform + mask to 
-            |  create a :class:`cortex.Volume` or :class:`cortex.Vertex` object
+            │  Combine the subject + transform + mask to
+            │  create a cortex.Volume or cortex.Vertex object
             ▼
     cortex.Volume  or  cortex.Vertex
             │  (VolumeRGB / Volume2D and their Vertex counterparts, for

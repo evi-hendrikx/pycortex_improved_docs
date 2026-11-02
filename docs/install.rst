@@ -49,7 +49,7 @@ For an explanation of what ``Volume``, ``webshow``, and the ``"fullhead"`` trans
 
 Basic Configuration
 -------------------
-Pycortex will automatically create a database filestore when it is first installed. In Linux, this filestore is located at :file:`/usr/local/share/pycortex/`. On first import, it will also create a configuration file in your user directory which allows you to specify additional options, including alternate filestore locations. In Linux, this user configuration file is located in :file:`~/.config/pycortex/options.cfg`.
+Pycortex will automatically create a database filestore when it is first installed. By default it is :file:`share/pycortex/db` under the install prefix (see :doc:`database`). On first import, it will also create a configuration file in your user directory which allows you to specify additional options, including alternate filestore locations. In Linux, this user configuration file is located in :file:`~/.config/pycortex/options.cfg`.
 
 You can check the location of the filestore after installing by running::
 
