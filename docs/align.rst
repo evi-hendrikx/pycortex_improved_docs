@@ -2,47 +2,35 @@ Aligning functional data
 ========================
 
 A functional (EPI) scan and the anatomical scan used to build a subject's
-surfaces (see :doc:`segmentation_guide`) are almost never acquired with the
-subject in exactly the same position, and EPI sequences (optimized for
-T2* contrast) suffer larger and different geometric distortions than the
-T1 anatomical sequence surfaces are built from. So even though both scans
-are of the same physical brain, their voxel grids don't start out
-pointing at the same anatomical locations — the functional data and the
-surface are, literally, misregistered. Before any functional value can be
-assigned to a point on the cortical surface, pycortex needs an explicit
-correction for this: a :term:`transform <xfm / transform>` (see
-:doc:`transforms`) that maps one coordinate space onto the other. That
-correction is deliberately limited to a **rigid-body** transform (6
-degrees of freedom: translation and rotation, no scaling/skewing/warping)
-— the two scans are of the same physical object, so allowing more degrees
-of freedom would let the alignment step silently absorb what should be
-segmentation or acquisition problems instead of just correcting for pose.
+surfaces are almost never acquired with the subject in exactly the same
+position, and EPI sequences (optimized for T2* contrast) suffer larger and
+different geometric distortions than the T1 anatomical. Before functional
+data can be put on the surface, pycortex needs a :term:`transform <xfm /
+transform>` that maps one onto the other (see :doc:`transforms` for what it
+stores). The alignment is limited to a **rigid-body** transform (6 degrees
+of freedom: translation and rotation): the two scans are of the same
+physical brain, so more freedom would only let the alignment silently
+absorb segmentation or acquisition problems.
 
-Two ways to compute that transform are available: **automatic** alignment
-(FreeSurfer's boundary-based registration by default, or FSL) and
-**manual** alignment (an interactive GUI, currently built on FreeSurfer's
-FreeView). Automatic alignment is fast and should be your first attempt
-for any new transform, but purely intensity/boundary-based registration
-algorithms optimize a global metric that isn't aware of which regions
-matter most for your analysis, and can fail outright on partial-volume
-acquisitions or unusual contrast — the tips below put this at "gets you
-like 95% of the way." Manual alignment exists as a fallback for the
-remaining cases: a person, looking at the actual images, correcting
-whatever the automatic step got wrong.
+Start with **automatic** alignment, which is fast and usually gets most of
+the way. Then check it, and correct it if needed, with **manual**
+alignment: a registration algorithm optimizes a global metric that doesn't
+know which regions matter for your analysis, and can fail on partial-volume
+acquisitions or unusual contrast.
 
-Pycortex can automatically try to align the brain, and there is also a manual mode.
-To get started, you need a reference image from the functional run in a nibabel-readable format.
-In most cases, this would be the temporal mean image. (You can also use something else like the first image, or whatever.)
-Let's say the subject is ``S1``, you are making a transform named ``example-transform``, and the reference image is ``ref-image.nii.gz``.
+The examples below use subject ``S1``, a new transform named
+``example-transform``, and a reference image ``ref-image.nii.gz`` from the
+functional run, in any format nibabel reads. This is usually the temporal
+mean image.
 
 Automatic Alignment
 -------------------
 
-This step creates a new transform folder in your pycortex store, and should be the first step for any alignment.
-
 Call ``cortex.align.automatic`` to align the brain automatically::
 
 	cortex.align.automatic('S1', 'example-transform', './ref-image.nii.gz')
+
+This creates the transform in the filestore, as ``S1/transforms/example-transform/`` (see :doc:`transforms`), and should be the first step for any alignment.
 
 As of pycortex 1.2.8, this uses FreeSurfer's ``mri_coreg`` (for an initial
 coarse alignment) followed by ``bbregister`` (boundary-based registration)
@@ -70,11 +58,6 @@ When it finishes, ``cortex.align.automatic`` prints a "mincost" quality
 score (0 to 1, lower is better; values under ~0.5 indicate a good
 registration) — but treat that as a sanity check, not a substitute for
 looking at the result yourself in the :ref:`manual aligner <manual-alignment>`.
-
-If you look in the pycortex store in ``S1/transforms/example-transform``, you will find the following files:
-
-* ``matrices.xfm``, which stores the transformation parameters
-* ``reference.nii.gz``, the reference image you used
 
 Both ``cortex.align.automatic`` and ``cortex.align.automatic_fsl`` accept a
 ``noclean`` argument (``bool``, default ``False``). Intermediate files
@@ -163,7 +146,7 @@ Tips for aligning the brain
 
   Smooth gradient across the brain → good alignment. A lot of voxels
   starkly different from their neighbours → revisit the alignment (see
-  :ref:`manual alignment <manual-alignment>` below).
+  :ref:`manual alignment <manual-alignment>` above).
 
   See :ref:`sphx_glr_auto_examples_utils_plot_check_alignment.py` for a
   runnable version of this check (against the bundled ``S1`` subject's
