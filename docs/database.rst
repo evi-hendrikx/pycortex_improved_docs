@@ -3,10 +3,9 @@ Surface Database
 
 Every subject in pycortex is built around the same handful of pieces:
 :term:`fiducial <fiducial surface>`, :term:`inflated <inflated surface>`,
-and :term:`flat <flat surface / flatmap>` surfaces (whichever of these are
-present must share a vertex count and per-vertex correspondence, see
-:doc:`segmentation_guide` — see :ref:`minimal-filestore-contents` for which
-of them a subject actually needs), one or more functional-to-anatomical
+and :term:`flat <flat surface / flatmap>` surfaces (see
+:ref:`minimal-filestore-contents` for which of them a subject actually
+needs), one or more functional-to-anatomical
 :doc:`transforms <transforms>`, masks
 derived from those transforms, and ROI/sulcus overlays. Pycortex keeps all
 of this in its own **filestore** rather than reading FreeSurfer's
@@ -86,14 +85,17 @@ info, views) is optional or generated on demand — you don't need any of
 it to get a subject working. What a subject actually needs before you
 can plot data on their surface is just:
 
-* **Surfaces**: the :ref:`fiducial geometry <database-surfaces>`, for both
-  hemispheres — this is the only surface pycortex strictly requires. Add
-  ``inflated`` too if you want the interactive WebGL/3D views, which is
-  almost always. ``flat`` is only needed if you actually intend to make
-  flatmaps for this subject: without it, pycortex works fine for 3D
-  visualization, it just can't flatten anything until you add one — no
-  error at import time, just a failure the moment something tries to
-  flatten.
+* **Surfaces**, for both hemispheres, all sharing the same vertices (see
+  :ref:`database-surfaces`):
+
+  * ``fiducial``, or the ``wm`` and ``pia`` surfaces it is computed from.
+    Line-sampling mappers and the ``cortical`` mask need ``wm`` and ``pia``
+    themselves.
+  * ``inflated`` for the interactive WebGL viewer.
+  * ``flat`` only if you want flatmaps. Without it, pycortex works fine for
+    3D visualization; there is no error at import time, just a failure the
+    moment something tries to flatten.
+
 * **A transform**: at least one :ref:`transform directory
   <database-transforms>` (``matrices.xfm`` + ``reference.nii.gz``) —
   one per functional dataset you intend to align and plot, not one per
@@ -188,30 +190,33 @@ The flatcache holds the voxel indices for quickly generating a flatmap. They hav
 Surfaces
 --------
 
-Pycortex fundamentally operates on triangular mesh geometry computed from a subject's anatomy. Surface geometries are usually created from a `marching cubes`_ reconstruction of the segmented cortical sheet. This undistorted reconstruction in the original anatomical space is known as the fiducial surface. The fiducial surface is inflated and cut along anatomical and functional boundaries and is morphed by an energy metric to be on a flattened 2D surface.
+Surfaces are triangular meshes, one file per surface type and hemisphere,
+stored in ``surfaces/`` as ``{type}_{hemi}.gii`` (``hemi`` is ``lh`` or
+``rh``). GIFTI is what pycortex's importers write; ``.npz`` (keys ``pts``
+and ``polys``), ``.vtk``, ``.off`` and ``.stl`` files are read too. The
+types pycortex uses are:
 
-Unfortunately, pycortex currently has no way of generating or editing these geometries directly. The recommended software for doing segmentation and flattening is Freesurfer_. Another package which is generally more user-friendly is Caret_. pycortex includes some utility functions to interact with Freesurfer_, which are documented in :ref:`database-freesurfer-import` below and in the ``cortex.freesurfer`` module.
+* ``wm`` and ``pia``: the white matter and pial boundaries of the cortical
+  sheet.
+* ``fiducial``: the :term:`undistorted surface <fiducial surface>` in
+  anatomical space. If there is no ``fiducial`` file, ``get_surf`` returns
+  the average of ``wm`` and ``pia``.
+* ``inflated``: the :term:`smoothed-out surface <inflated surface>` used
+  by the WebGL viewer.
+* ``flat``: the :term:`cut and flattened surface <flat surface / flatmap>`.
 
-A surface in pycortex is any file specifying the triangular mesh geometry of a subject. Surfaces may be stored in any one of **OFF**, **VTK**, or **npz** formats. The highest performance is achieved with **npz** since it is binary and compressed. VTK is also efficient, having a `Cython` module to read files. Inside the filestore, surface names are formatted as ``{type}_{hemisphere}.{format}``. Surfaces generally have three variables associated:
-
-    * **Subject** : a unique subject identifier
-    * **Type** : the identifier for the type of geometry, **fiducial**, **inflated**, or **flat**
-    * **Hemisphere** : the brain hemisphere of the surface, **lh** or **rh**
-
-The surface files for a specific subject and hemisphere must have the same number of vertices across all the different types. Without this information, the mapping from fiducial to flatmap is not preserved, and there is no way to display data on the flatmap. Freesurfer_ surfaces preserve this relationship, and can be automatically imported into the database. pycortex does not check the validity of surfaces, and will break in unexpected ways if the number of vertices do not match! It is your job to make sure that all surfaces are valid.
-
-The fiducial geometry must be available for a subject for pycortex to do anything with them at all. The flat geometry is only needed once you want to flatten — a subject with no ``flat`` surface works fine for 3D/WebGL visualization, it just can't be flattened until you add one. Surfaces must be stored in VTK v. 1 format (also known as the ASCII format).
-
-
-Adding new surfaces
-~~~~~~~~~~~~~~~~~~~
-Surface management is implemented through your file manager. To add a new surface to an existing subject, copy the surface file into ``{$FILESTORE}/{$SUBJECT}/surfaces/`` with the format ``{type}_{hemisphere}.{format}``, where ``hemisphere`` is **lh** or **rh**, and format is one of **OFF**, **VTK**, or an **npz** file with keys 'pts' and 'polys'. If you have a python session with pycortex imported already, please reload the session. The new surfaces should be accessible via the given interfaces immediately.
-
-In order to adequately utilize all the functions in pycortex, please add the **fiducial**, **inflated**, and **flat** geometries for both hemispheres. Again, make sure that all the surface types for a given subject and hemisphere have the same number of vertices, otherwise unexpected things may happen!
+All surface types of a hemisphere must have the same vertices in the same
+order: vertex *i* of the flat surface is vertex *i* of the fiducial
+surface. This correspondence is what lets data mapped onto one surface be
+shown on all the others. FreeSurfer surfaces have it, but pycortex does not
+check it, and mismatched surfaces break in unexpected ways.
 
 See :ref:`database-freesurfer-import` and :ref:`database-autoflatten` in
 :doc:`importing_other_software` for importing a subject from FreeSurfer and
-flattening its surfaces.
+flattening its surfaces. To add a surface by hand, copy it into
+``{filestore}/{subject}/surfaces/`` with the name above. ``get_surf`` finds
+it immediately; the attribute interface (``cortex.db.S1.surfaces``) only
+after restarting Python.
 
 
 .. _database-transforms:
@@ -268,8 +273,6 @@ Overlays are stored as SVG_'s. This is where surface ROIs are defined. Since the
 
 .. _OpenCTM: http://openctm.sourceforge.net/
 .. _SVG: http://en.wikipedia.org/wiki/Scalable_Vector_Graphics
-.. _marching cubes: http://en.wikipedia.org/wiki/Marching_cubes
-.. _Caret: http://brainvis.wustl.edu/wiki/index.php/Main_Page
 .. _Freesurfer: http://surfer.nmr.mgh.harvard.edu/
 .. _ipython: http://ipython.org/
 .. _SVG: http://en.wikipedia.org/wiki/Scalable_Vector_Graphics
