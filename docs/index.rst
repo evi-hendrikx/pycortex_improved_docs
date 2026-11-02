@@ -11,45 +11,33 @@ New to pycortex? Start with the :doc:`overview` page for the mental model, and t
 
 .. _which-page:
 
-Which page do I need?
----------------------
+Where do I start?
+-----------------
+
+Every page is listed in the sidebar. Where to begin depends on what you
+already have:
 
 .. list-table::
    :header-rows: 1
    :widths: 45 55
 
-   * - I want to...
-     - Go to...
-   * - Understand pycortex's vocabulary before reading further
-     - :doc:`glossary`
-   * - Set up a new subject from scratch
+   * - I have...
+     - Start at...
+   * - Nothing yet, and want to see pycortex work
+     - :doc:`install`, then
+       :ref:`sphx_glr_auto_examples_quickstart_plot_pipeline_overview.py`
+       with the bundled ``S1`` subject
+   * - An anatomical scan, but no surfaces
      - :doc:`subject_setup`
-   * - Build and edit surfaces with FreeSurfer
-     - :doc:`segmentation_guide`
-   * - Cut and flatten surfaces into flatmaps
-     - :doc:`flattening`
-   * - Bring in surfaces, data or transforms from FreeSurfer, fMRIPrep, HCP,
-       fsaverage, AFNI, BrainVoyager, FSL or SPM
+   * - Surfaces from FreeSurfer, fMRIPrep, HCP, fsaverage or another tool
      - :doc:`importing_other_software`
-   * - Understand what's stored in the filestore / browse an existing
-       subject's data
-     - :doc:`database`
-   * - Register a functional scan to a subject's anatomy
-     - :doc:`align` and :doc:`transforms`
-   * - Define and use regions of interest
-     - :doc:`rois` (SVG/Inkscape workflow) and :doc:`roidraw` (in-browser
-       drawing add-on)
-   * - Get per-vertex values from volume data
-     - :doc:`mapping`
-   * - Render a static 2D image of data on a flatmap
-     - :doc:`quickflat`
-   * - Get an interactive 3D/flat viewer
-     - :doc:`userguide/webgl`
-   * - Pick colors for 1D or 2D data
-     - :doc:`colormaps`
-   * - See real, runnable end-to-end code
-     - :doc:`auto_examples/index`
-   * - Try optional extras and new additions
+   * - A pycortex subject and functional data
+     - :doc:`align`, then :doc:`dataset`
+   * - Data in a ``Volume`` or ``Vertex``, ready to plot
+     - :doc:`quickflat` or :doc:`userguide/webgl`
+   * - A function name to look up
+     - :doc:`api_reference_flat`
+   * - Used pycortex before, and want to see what's new
      - The Features section in the sidebar, e.g.
        :doc:`features/camera_views_animations` and
        :doc:`features/bumpy_flatmap`
